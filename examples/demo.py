@@ -5,7 +5,7 @@ from typing import List
 
 import chess
 from PySide6.QtCore import QTimer
-from PySide6.QtGui import QFont, QFontDatabase
+from PySide6.QtGui import QFont, QFontDatabase, QResizeEvent
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -139,6 +139,29 @@ class MainWindow(QMainWindow):
         self.current_move_index = -1  # -1 means start of game (no moves made)
 
         self.update_buttons()
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        """Maintain aspect ratio to keep board square and fill horizontal space."""
+        super().resizeEvent(event)
+
+        # Calculate the required height based on width
+        # Width includes margins (20px left + 20px right = 40px)
+        # Height includes: top margin (20px) + board + nav bar (50px)
+        # + flip button (~30px) + bottom margin (20px)
+        width = self.width()
+        board_size = width - 40  # Subtract horizontal margins
+
+        # Total height needed:
+        # - Top margin: 20
+        # - Board: board_size (square)
+        # - Nav bar: 50
+        # - Flip button: ~30
+        # - Bottom margin: 20
+        required_height = 20 + board_size + 50 + 30 + 20
+
+        # Adjust height if needed (tolerance to avoid infinite loops)
+        if abs(self.height() - required_height) > 5:
+            self.resize(width, int(required_height))
 
     def toggle_flip(self) -> None:
         self.flipped = not self.flipped
