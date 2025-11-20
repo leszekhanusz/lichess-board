@@ -54,23 +54,26 @@ class MainWindow(QMainWindow):
         nav_layout.setSpacing(5)  # Small spacing between buttons
 
         # Stylesheet for buttons
-        # hsl(209, 66%, 84%) -> #bbdcf9 (approx) but Qt supports hsl/hsla
+        # hsl(209, 66%, 84%) -> #bbdcf9 (approx)
+        # Font color: hsl(0, 0%, 37%) -> rgb(94, 94, 94)
         button_style = """
             QPushButton {
                 background-color: transparent;
                 border: none;
                 border-radius: 5px;
                 padding: 5px;
-                color: #666666;
+            }
+            QPushButton:enabled {
+                color: rgba(94, 94, 94, 0.9); /* 90% opacity */
+            }
+            QPushButton:disabled {
+                color: rgba(94, 94, 94, 0.5); /* 50% opacity */
             }
             QPushButton:hover {
                 background-color: hsl(209, 66%, 84%);
             }
             QPushButton:pressed {
                 background-color: hsl(209, 66%, 70%);
-            }
-            QPushButton:disabled {
-                opacity: 0.5;
             }
         """
 
