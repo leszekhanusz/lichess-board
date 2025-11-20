@@ -33,13 +33,12 @@ class ChessBoardWidget(QWidget):
         self._hover_square: Optional[int] = None
 
         # Animation state - supports multiple pieces (e.g., castling)
-        # List of (piece, start_pos, end_pos) tuples
-        self._animating_pieces: List[Tuple[chess.Piece, QPointF, QPointF]] = []
+        # List of (piece, start_pos, end_pos, exclude_square) tuples
+        self._animating_pieces: List[Tuple[chess.Piece, QPointF, QPointF, int]] = []
         self._anim_timer = QTimer()
         self._anim_timer.setInterval(16)  # ~60 FPS
         self._anim_timer.timeout.connect(self._update_animation)
         self._anim_progress = 0.0
-        self._anim_move: Optional[chess.Move] = None
 
         self.setMouseTracking(True)  # Enable mouse tracking for hover effects
         self.setMinimumSize(200, 200)
@@ -106,22 +105,8 @@ class ChessBoardWidget(QWidget):
         # Draw pieces
         # Build list of squares to exclude (animating pieces)
         exclude_squares = []
-        if self._animating_pieces and self._anim_move:
-            # For castling, exclude both king and rook source squares
-            if self._board.is_castling(self._anim_move):
-                exclude_squares.append(self._anim_move.from_square)
-                # Determine rook source square
-                king_to = self._anim_move.to_square
-                if king_to == chess.G1:
-                    exclude_squares.append(chess.H1)
-                elif king_to == chess.C1:
-                    exclude_squares.append(chess.A1)
-                elif king_to == chess.G8:
-                    exclude_squares.append(chess.H8)
-                elif king_to == chess.C8:
-                    exclude_squares.append(chess.A8)
-            else:
-                exclude_squares.append(self._anim_move.from_square)
+        for _, _, _, exclude_sq in self._animating_pieces:
+            exclude_squares.append(exclude_sq)
 
         # Draw all pieces, excluding animating ones
         square_size = rect.width() / 8
@@ -195,7 +180,7 @@ class ChessBoardWidget(QWidget):
         # Draw animating pieces
         if self._animating_pieces:
             square_size = rect.width() / 8
-            for piece, start_pos, end_pos in self._animating_pieces:
+            for piece, start_pos, end_pos, _ in self._animating_pieces:
                 # Linear interpolation
                 current_x = (
                     start_pos.x() + (end_pos.x() - start_pos.x()) * self._anim_progress
@@ -339,22 +324,34 @@ class ChessBoardWidget(QWidget):
         self.play_move(move, animate=False)
 
     def play_move(self, move: chess.Move, animate: bool = True) -> None:
-        if animate:
-            self._anim_move = move
+        # If animating, stop current animation
+        if self._anim_timer.isActive():
+            self._anim_timer.stop()
             self._animating_pieces = []
 
-            # Add king/main piece animation
+        if animate:
+            # Setup animation based on the move
+            # We want to animate from from_square to to_square
+            # But we will update the board state immediately.
+            # So the piece will be at to_square on the board.
+            # We need to exclude to_square and draw piece moving from
+            # from_square to to_square.
+
+            self._animating_pieces = []
+
+            # Main piece animation
             piece = self._board.piece_at(move.from_square)
             if piece:
                 start_pos = self._get_square_center(move.from_square)
                 end_pos = self._get_square_center(move.to_square)
-                self._animating_pieces.append((piece, start_pos, end_pos))
+                # Exclude to_square because that's where the piece will be after push
+                self._animating_pieces.append(
+                    (piece, start_pos, end_pos, move.to_square)
+                )
 
-            # Check if this is a castling move and add rook animation
+            # Castling animation
             if self._board.is_castling(move):
-                # Determine rook movement based on king's destination
                 king_to = move.to_square
-
                 if king_to == chess.G1:  # White kingside
                     rook_from, rook_to = chess.H1, chess.F1
                 elif king_to == chess.C1:  # White queenside
@@ -371,13 +368,91 @@ class ChessBoardWidget(QWidget):
                     if rook:
                         rook_start = self._get_square_center(rook_from)
                         rook_end = self._get_square_center(rook_to)
-                        self._animating_pieces.append((rook, rook_start, rook_end))
+                        # Exclude rook_to because that's where rook will be after push
+                        self._animating_pieces.append(
+                            (rook, rook_start, rook_end, rook_to)
+                        )
 
+            # Update board state immediately
+            self._board.push(move)
+            self.move_played.emit(move)
+
+            # Start animation
             self._anim_progress = 0.0
             self._anim_timer.start()
+            self.update()
         else:
             self._board.push(move)
             self.move_played.emit(move)
+            self.update()
+
+    def undo_move(self, animate: bool = True) -> None:
+        # If animating, stop current animation
+        if self._anim_timer.isActive():
+            self._anim_timer.stop()
+            self._animating_pieces = []
+
+        if not self._board.move_stack:
+            return
+
+        move = self._board.peek()
+
+        if animate:
+            self._animating_pieces = []
+
+            # We are undoing. The piece is currently at to_square.
+            # We want to animate it back to from_square.
+            # After pop(), piece will be at from_square.
+            # So we exclude from_square and draw piece moving from
+            # to_square to from_square.
+
+            piece = self._board.piece_at(move.to_square)
+            if piece:
+                start_pos = self._get_square_center(move.to_square)
+                end_pos = self._get_square_center(move.from_square)
+                # Exclude from_square because that's where piece will be after pop
+                self._animating_pieces.append(
+                    (piece, start_pos, end_pos, move.from_square)
+                )
+
+                # Check for castling undo
+                if (
+                    piece.piece_type == chess.KING
+                    and abs(move.to_square - move.from_square) == 2
+                ):
+                    king_to = move.to_square
+                    if king_to == chess.G1:  # White kingside
+                        rook_from, rook_to = chess.H1, chess.F1
+                    elif king_to == chess.C1:  # White queenside
+                        rook_from, rook_to = chess.A1, chess.D1
+                    elif king_to == chess.G8:  # Black kingside
+                        rook_from, rook_to = chess.H8, chess.F8
+                    elif king_to == chess.C8:  # Black queenside
+                        rook_from, rook_to = chess.A8, chess.D8
+                    else:
+                        rook_from, rook_to = None, None
+
+                    if rook_from is not None and rook_to is not None:
+                        # Rook is currently at rook_to
+                        rook = self._board.piece_at(rook_to)
+                        if rook:
+                            rook_start = self._get_square_center(rook_to)
+                            rook_end = self._get_square_center(rook_from)
+                            # Exclude rook_from because that's where rook
+                            # will be after pop
+                            self._animating_pieces.append(
+                                (rook, rook_start, rook_end, rook_from)
+                            )
+
+            # Update board state immediately
+            self._board.pop()
+
+            # Start animation
+            self._anim_progress = 0.0
+            self._anim_timer.start()
+            self.update()
+        else:
+            self._board.pop()
             self.update()
 
     def _update_animation(self) -> None:
@@ -385,11 +460,7 @@ class ChessBoardWidget(QWidget):
         if self._anim_progress >= 1.0:
             self._anim_progress = 1.0
             self._anim_timer.stop()
-            if self._anim_move:
-                self._board.push(self._anim_move)
-                self.move_played.emit(self._anim_move)
             self._animating_pieces = []
-            self._anim_move = None
             self.update()
             return
 

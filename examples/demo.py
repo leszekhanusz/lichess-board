@@ -223,32 +223,28 @@ class MainWindow(QMainWindow):
 
     def go_first(self) -> None:
         while self.current_move_index >= 0:
-            self.board_widget._board.pop()
+            self.board_widget.undo_move(animate=False)
             self.current_move_index -= 1
-        self.board_widget.update()
         self.update_buttons()
 
     def go_prev(self) -> None:
         if self.current_move_index >= 0:
-            self.board_widget._board.pop()
+            self.board_widget.undo_move(animate=True)
             self.current_move_index -= 1
-            self.board_widget.update()
             self.update_buttons()
 
     def go_next(self) -> None:
         if self.current_move_index < len(self.move_history) - 1:
             move = self.move_history[self.current_move_index + 1]
-            self.board_widget._board.push(move)
+            self.board_widget.play_move(move, animate=True)
             self.current_move_index += 1
-            self.board_widget.update()
             self.update_buttons()
 
     def go_last(self) -> None:
         while self.current_move_index < len(self.move_history) - 1:
             move = self.move_history[self.current_move_index + 1]
-            self.board_widget._board.push(move)
+            self.board_widget.play_move(move, animate=False)
             self.current_move_index += 1
-        self.board_widget.update()
         self.update_buttons()
 
 
