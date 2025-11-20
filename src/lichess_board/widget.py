@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import chess
 from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
@@ -32,11 +32,9 @@ class ChessBoardWidget(QWidget):
         self._legal_moves: List[chess.Move] = []
         self._hover_square: Optional[int] = None
 
-        # Animation state
-        self._animating_piece: Optional[chess.Piece] = None
-        self._anim_start_pos: QPointF = QPointF()
-        self._anim_current_pos: QPointF = QPointF()
-        self._anim_end_pos: QPointF = QPointF()
+        # Animation state - supports multiple pieces (e.g., castling)
+        # List of (piece, start_pos, end_pos) tuples
+        self._animating_pieces: List[Tuple[chess.Piece, QPointF, QPointF]] = []
         self._anim_timer = QTimer()
         self._anim_timer.setInterval(16)  # ~60 FPS
         self._anim_timer.timeout.connect(self._update_animation)
@@ -106,22 +104,70 @@ class ChessBoardWidget(QWidget):
                 )
 
         # Draw pieces
-        # If dragging, draw the dragged piece in its square as faded
-        faded = self._dragged_square if self._is_dragging else None
-        exclude = None
+        # Build list of squares to exclude (animating pieces)
+        exclude_squares = []
+        if self._animating_pieces and self._anim_move:
+            # For castling, exclude both king and rook source squares
+            if self._board.is_castling(self._anim_move):
+                exclude_squares.append(self._anim_move.from_square)
+                # Determine rook source square
+                king_to = self._anim_move.to_square
+                if king_to == chess.G1:
+                    exclude_squares.append(chess.H1)
+                elif king_to == chess.C1:
+                    exclude_squares.append(chess.A1)
+                elif king_to == chess.G8:
+                    exclude_squares.append(chess.H8)
+                elif king_to == chess.C8:
+                    exclude_squares.append(chess.A8)
+            else:
+                exclude_squares.append(self._anim_move.from_square)
 
-        # If animating, don't draw the piece at the source square
-        if self._animating_piece and self._anim_move:
-            exclude = self._anim_move.from_square
-
-        self._renderer.draw_pieces(
-            painter,
-            rect,
-            self._board,
-            self._flipped,
-            exclude_square=exclude,
-            faded_square=faded,
-        )
+        # Draw all pieces, excluding animating ones
+        square_size = rect.width() / 8
+        for square in chess.SQUARES:
+            if square in exclude_squares:
+                continue
+            if square == self._dragged_square and self._is_dragging:
+                # Draw dragged piece faded
+                piece = self._board.piece_at(square)
+                if piece:
+                    rank = chess.square_rank(square)
+                    file = chess.square_file(square)
+                    if self._flipped:
+                        visual_row = rank
+                        visual_col = 7 - file
+                    else:
+                        visual_row = 7 - rank
+                        visual_col = file
+                    x = rect.x() + visual_col * square_size
+                    y = rect.y() + visual_row * square_size
+                    color_prefix = "w" if piece.color == chess.WHITE else "b"
+                    piece_code = f"{color_prefix}{piece.symbol().upper()}"
+                    renderer = self._renderer.piece_renderers.get(piece_code)
+                    if renderer:
+                        painter.save()
+                        painter.setOpacity(0.5)
+                        renderer.render(painter, QRectF(x, y, square_size, square_size))
+                        painter.restore()
+            else:
+                piece = self._board.piece_at(square)
+                if piece:
+                    rank = chess.square_rank(square)
+                    file = chess.square_file(square)
+                    if self._flipped:
+                        visual_row = rank
+                        visual_col = 7 - file
+                    else:
+                        visual_row = 7 - rank
+                        visual_col = file
+                    x = rect.x() + visual_col * square_size
+                    y = rect.y() + visual_row * square_size
+                    color_prefix = "w" if piece.color == chess.WHITE else "b"
+                    piece_code = f"{color_prefix}{piece.symbol().upper()}"
+                    renderer = self._renderer.piece_renderers.get(piece_code)
+                    if renderer:
+                        renderer.render(painter, QRectF(x, y, square_size, square_size))
 
         # Draw legal moves hints
         if self._selected_square is not None:
@@ -146,15 +192,23 @@ class ChessBoardWidget(QWidget):
                     square_size,
                 )
 
-        # Draw animating piece
-        if self._animating_piece:
+        # Draw animating pieces
+        if self._animating_pieces:
             square_size = rect.width() / 8
-            self._renderer.draw_dragged_piece(
-                painter,
-                self._animating_piece,
-                (self._anim_current_pos.x(), self._anim_current_pos.y()),
-                square_size,
-            )
+            for piece, start_pos, end_pos in self._animating_pieces:
+                # Linear interpolation
+                current_x = (
+                    start_pos.x() + (end_pos.x() - start_pos.x()) * self._anim_progress
+                )
+                current_y = (
+                    start_pos.y() + (end_pos.y() - start_pos.y()) * self._anim_progress
+                )
+                self._renderer.draw_dragged_piece(
+                    painter,
+                    piece,
+                    (current_x, current_y),
+                    square_size,
+                )
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() != Qt.MouseButton.LeftButton:
@@ -287,10 +341,38 @@ class ChessBoardWidget(QWidget):
     def play_move(self, move: chess.Move, animate: bool = True) -> None:
         if animate:
             self._anim_move = move
-            self._animating_piece = self._board.piece_at(move.from_square)
-            self._anim_start_pos = self._get_square_center(move.from_square)
-            self._anim_end_pos = self._get_square_center(move.to_square)
-            self._anim_current_pos = self._anim_start_pos
+            self._animating_pieces = []
+
+            # Add king/main piece animation
+            piece = self._board.piece_at(move.from_square)
+            if piece:
+                start_pos = self._get_square_center(move.from_square)
+                end_pos = self._get_square_center(move.to_square)
+                self._animating_pieces.append((piece, start_pos, end_pos))
+
+            # Check if this is a castling move and add rook animation
+            if self._board.is_castling(move):
+                # Determine rook movement based on king's destination
+                king_to = move.to_square
+
+                if king_to == chess.G1:  # White kingside
+                    rook_from, rook_to = chess.H1, chess.F1
+                elif king_to == chess.C1:  # White queenside
+                    rook_from, rook_to = chess.A1, chess.D1
+                elif king_to == chess.G8:  # Black kingside
+                    rook_from, rook_to = chess.H8, chess.F8
+                elif king_to == chess.C8:  # Black queenside
+                    rook_from, rook_to = chess.A8, chess.D8
+                else:
+                    rook_from, rook_to = None, None
+
+                if rook_from is not None:
+                    rook = self._board.piece_at(rook_from)
+                    if rook:
+                        rook_start = self._get_square_center(rook_from)
+                        rook_end = self._get_square_center(rook_to)
+                        self._animating_pieces.append((rook, rook_start, rook_end))
+
             self._anim_progress = 0.0
             self._anim_timer.start()
         else:
@@ -306,22 +388,12 @@ class ChessBoardWidget(QWidget):
             if self._anim_move:
                 self._board.push(self._anim_move)
                 self.move_played.emit(self._anim_move)
-            self._animating_piece = None
+            self._animating_pieces = []
             self._anim_move = None
             self.update()
             return
 
-        # Interpolate
-        # Linear interpolation
-        x = (
-            self._anim_start_pos.x()
-            + (self._anim_end_pos.x() - self._anim_start_pos.x()) * self._anim_progress
-        )
-        y = (
-            self._anim_start_pos.y()
-            + (self._anim_end_pos.y() - self._anim_start_pos.y()) * self._anim_progress
-        )
-        self._anim_current_pos = QPointF(x, y)
+        # Animation continues, widget will interpolate in paintEvent
         self.update()
 
     def _get_square_center(self, square: int) -> QPointF:
