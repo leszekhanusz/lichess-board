@@ -57,7 +57,7 @@ class ChessBoardWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        rect = QRectF(self.rect())
+        rect = self._get_board_rect()
         
         # Draw board and coordinates
         self._renderer.draw_board(painter, rect, self._flipped)
@@ -191,19 +191,19 @@ class ChessBoardWidget(QWidget):
         self.update()
 
     def _pos_to_square(self, pos: QPointF) -> Optional[int]:
-        w = self.width()
-        h = self.height()
-        s = min(w, h)
+        rect = self._get_board_rect()
         
-        # Assuming board is drawn at (0,0) with size s x s
-        # If we want to center it, we need to offset.
-        # For now, let's assume it fills the widget (or top-left if non-square).
-        # Renderer uses rect.width() for calculation.
+        if not rect.contains(pos):
+            return None
+            
+        square_size = rect.width() / 8
         
-        square_size = w / 8 # Renderer uses width
+        # Relative position
+        rel_x = pos.x() - rect.x()
+        rel_y = pos.y() - rect.y()
         
-        col = int(pos.x() / square_size)
-        row = int(pos.y() / square_size)
+        col = int(rel_x / square_size)
+        row = int(rel_y / square_size)
         
         if col < 0 or col > 7 or row < 0 or row > 7:
             return None
@@ -215,10 +215,6 @@ class ChessBoardWidget(QWidget):
             rank = 8 - row # row 0 -> rank 8
             file = col     # col 0 -> file a
             
-        # rank is 1-8, file is 0-7 (a=0, h=7)
-        # chess.square(file_index, rank_index)
-        # rank_index is 0-7
-        
         return chess.square(file, rank - 1)
 
     def _find_move(self, from_sq: int, to_sq: int) -> Optional[chess.Move]:
@@ -269,8 +265,8 @@ class ChessBoardWidget(QWidget):
         self.update()
 
     def _get_square_center(self, square: int) -> QPointF:
-        w = self.width()
-        square_size = w / 8
+        rect = self._get_board_rect()
+        square_size = rect.width() / 8
         
         rank = chess.square_rank(square)
         file = chess.square_file(square)
@@ -282,9 +278,19 @@ class ChessBoardWidget(QWidget):
             visual_row = 7 - rank
             visual_col = file
             
-        x = visual_col * square_size + square_size / 2
-        y = visual_row * square_size + square_size / 2
+        x = rect.x() + visual_col * square_size + square_size / 2
+        y = rect.y() + visual_row * square_size + square_size / 2
         return QPointF(x, y)
+
+    def _get_board_rect(self) -> QRectF:
+        w = self.width()
+        h = self.height()
+        s = min(w, h)
+        
+        x = (w - s) / 2
+        y = (h - s) / 2
+        
+        return QRectF(x, y, s, s)
 
     def _clear_selection(self) -> None:
         self._selected_square = None
