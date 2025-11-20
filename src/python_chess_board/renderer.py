@@ -5,6 +5,12 @@ from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QBrush, QColor, QPainter, QPen
 from PySide6.QtSvg import QSvgRenderer
 
+try:
+    from importlib.resources import files
+except ImportError:
+    # Python < 3.9 fallback
+    from importlib_resources import files  # type: ignore
+
 
 class Renderer:
     def __init__(self) -> None:
@@ -33,16 +39,14 @@ class Renderer:
             "bK",
         ]
 
-        # In a real package, we would use importlib.resources
-        # For now, we assume the path relative to the working directory
-        import os
-
-        # Try to find assets relative to this file
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        assets_dir = os.path.join(current_dir, "assets")
+        # Use importlib.resources to access package assets
+        assets_path = files("python_chess_board").joinpath("assets")
 
         for p in pieces:
-            renderer = QSvgRenderer(os.path.join(assets_dir, f"{p}.svg"))
+            svg_file = assets_path.joinpath(f"{p}.svg")
+            # Read the SVG content and pass it to QSvgRenderer
+            svg_data = svg_file.read_bytes()
+            renderer = QSvgRenderer(svg_data)
             self.piece_renderers[p] = renderer
 
     def draw_board(self, painter: QPainter, rect: QRectF, flipped: bool) -> None:
