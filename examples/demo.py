@@ -11,7 +11,7 @@ import chess
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Python Chess Board Example")
         self.resize(600, 650)
@@ -31,11 +31,11 @@ class MainWindow(QMainWindow):
 
         self.flipped = False
 
-    def toggle_flip(self):
+    def toggle_flip(self) -> None:
         self.flipped = not self.flipped
         self.board_widget.set_flipped(self.flipped)
 
-    def on_move_played(self, move: chess.Move):
+    def on_move_played(self, move: chess.Move) -> None:
         print(f"Move played: {move}")
 
 

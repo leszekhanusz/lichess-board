@@ -5,7 +5,7 @@ from python_chess_board import ChessBoardWidget
 from PySide6.QtCore import QTimer
 
 
-def test_animation():
+def test_animation() -> None:
     app = QApplication(sys.argv)
     widget = ChessBoardWidget()
     widget.show()

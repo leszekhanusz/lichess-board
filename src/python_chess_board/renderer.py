@@ -79,7 +79,7 @@ class Renderer:
                     painter.setFont(font)
                     painter.drawText(
                         QRectF(x, y + 2, square_size - 2, square_size),
-                        Qt.AlignTop | Qt.AlignRight,
+                        Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight,
                         rank_text,
                     )
 
@@ -94,7 +94,7 @@ class Renderer:
                     painter.setFont(font)
                     painter.drawText(
                         QRectF(x + 2, y, square_size, square_size - 2),
-                        Qt.AlignBottom | Qt.AlignLeft,
+                        Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft,
                         file_text,
                     )
 
@@ -170,7 +170,7 @@ class Renderer:
         hide_square: Optional[int] = None,
     ) -> None:
         square_size = rect.width() / 8
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
 
         for move in moves:
             target = move.to_square
@@ -196,7 +196,7 @@ class Renderer:
             if board.piece_at(target):
                 color = self.move_hint_color
                 # Draw ring for capture
-                painter.setBrush(Qt.NoBrush)
+                painter.setBrush(Qt.BrushStyle.NoBrush)
                 pen = QPen(color)
                 pen.setWidth(int(square_size * 0.1))
                 painter.setPen(pen)
@@ -208,7 +208,7 @@ class Renderer:
                         square_size * 0.8,
                     )
                 )
-                painter.setPen(Qt.NoPen)
+                painter.setPen(Qt.PenStyle.NoPen)
             else:
                 color = self.move_hint_color
                 painter.setBrush(QBrush(color))
