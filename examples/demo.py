@@ -69,8 +69,9 @@ class MainWindow(QMainWindow):
             QPushButton:disabled {
                 color: rgba(94, 94, 94, 0.5); /* 50% opacity */
             }
-            QPushButton:hover {
+            QPushButton:hover:enabled {
                 background-color: hsl(209, 66%, 84%);
+                color: white;
             }
             QPushButton:pressed {
                 background-color: hsl(209, 66%, 70%);
