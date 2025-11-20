@@ -1,37 +1,22 @@
-import sys
-
 import chess
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QApplication
+from pytestqt.qtbot import QtBot
 
 from lichess_board import ChessBoardWidget
 
 
-def test_animation() -> None:
-    app = QApplication(sys.argv)
+def test_animation(qtbot: QtBot) -> None:
     widget = ChessBoardWidget()
+    qtbot.addWidget(widget)
     widget.show()
 
     # Setup a move to animate
     move = chess.Move.from_uci("e2e4")
-    print(f"Animating move: {move}")
 
     # Trigger animation
-    try:
-        widget.play_move(move, animate=True)
-        print("Animation started successfully")
-    except AttributeError as e:
-        print(f"Caught expected error: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"Caught unexpected error: {e}")
-        sys.exit(1)
+    widget.play_move(move, animate=True)
 
-    # Let it run for a bit
-    QTimer.singleShot(1000, app.quit)
-    app.exec()
-    print("Test finished")
+    # Wait for animation to complete (approx 1000ms safe margin)
+    qtbot.wait(1000)
 
-
-if __name__ == "__main__":
-    test_animation()
+    # Verify move was made on board
+    assert widget._board.peek() == move
