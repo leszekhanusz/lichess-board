@@ -366,7 +366,7 @@ class ChessBoardWidget(QWidget):
                 else:
                     rook_from, rook_to = None, None
 
-                if rook_from is not None:
+                if rook_from is not None and rook_to is not None:
                     rook = self._board.piece_at(rook_from)
                     if rook:
                         rook_start = self._get_square_center(rook_from)
