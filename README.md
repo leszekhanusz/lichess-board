@@ -2,6 +2,8 @@
 
 A modern, feature-rich chess board widget for PySide6 applications, designed to mimic the visual style and user experience of Lichess. It is built on top of the powerful [python-chess](https://github.com/niklasf/python-chess) library.
 
+![Fool's Mate Demo](fools_mate.gif)
+
 ## Features
 
 - **Lichess-like Aesthetics**: Uses standard Lichess colors, SVG piece sets, and highlighting styles.
