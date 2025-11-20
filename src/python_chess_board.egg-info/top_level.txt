@@ -1,1 +1,0 @@
-python_chess_board

@@ -6,3 +6,15 @@ __pycache__/
 .vscode/
 *.swp
 .DS_Store
+
+# Build artifacts
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Testing and coverage
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
