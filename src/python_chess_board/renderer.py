@@ -55,27 +55,27 @@ class Renderer:
                 actual_rank = 8 - row if not flipped else row + 1
                 actual_file = chr(ord('a') + col) if not flipped else chr(ord('h') - col)
                 
-                # Draw rank on the left-most column
-                if col == 0:
+                # Draw rank on the right-most column
+                if col == 7:
                     rank_text = str(actual_rank)
-                    # Draw at top-left of the square
+                    # Draw at top-right of the square
                     text_color = self.dark_color if is_light else self.light_color
                     painter.setPen(text_color)
                     font = painter.font()
                     font.setPixelSize(int(square_size * 0.2))
                     painter.setFont(font)
-                    painter.drawText(QRectF(x + 2, y + 2, square_size, square_size), Qt.AlignTop | Qt.AlignLeft, rank_text)
+                    painter.drawText(QRectF(x, y + 2, square_size - 2, square_size), Qt.AlignTop | Qt.AlignRight, rank_text)
 
                 # Draw file on the bottom-most row
                 if row == 7:
                     file_text = actual_file
-                    # Draw at bottom-right of the square
+                    # Draw at bottom-left of the square
                     text_color = self.dark_color if is_light else self.light_color
                     painter.setPen(text_color)
                     font = painter.font()
                     font.setPixelSize(int(square_size * 0.2))
                     painter.setFont(font)
-                    painter.drawText(QRectF(x, y, square_size - 2, square_size - 2), Qt.AlignBottom | Qt.AlignRight, file_text)
+                    painter.drawText(QRectF(x + 2, y, square_size, square_size - 2), Qt.AlignBottom | Qt.AlignLeft, file_text)
 
     def draw_pieces(self, painter: QPainter, rect: QRectF, board: chess.Board, flipped: bool, exclude_square: Optional[int] = None, faded_square: Optional[int] = None) -> None:
         square_size = rect.width() / 8
@@ -91,7 +91,7 @@ class Renderer:
                 file = chess.square_file(square)
                 
                 if flipped:
-                    visual_row = 7 - rank
+                    visual_row = rank
                     visual_col = 7 - file
                 else:
                     visual_row = 7 - rank
@@ -133,7 +133,7 @@ class Renderer:
             file = chess.square_file(target)
             
             if flipped:
-                visual_row = 7 - rank
+                visual_row = rank
                 visual_col = 7 - file
             else:
                 visual_row = 7 - rank
@@ -173,7 +173,7 @@ class Renderer:
         file = chess.square_file(square)
         
         if flipped:
-            visual_row = 7 - rank
+            visual_row = rank
             visual_col = 7 - file
         else:
             visual_row = 7 - rank

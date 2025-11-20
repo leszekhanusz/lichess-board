@@ -276,7 +276,7 @@ class ChessBoardWidget(QWidget):
         file = chess.square_file(square)
         
         if self._flipped:
-            visual_row = 7 - rank
+            visual_row = rank
             visual_col = 7 - file
         else:
             visual_row = 7 - rank
