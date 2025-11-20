@@ -1,6 +1,6 @@
 # Python Chess Board Widget
 
-A modern, feature-rich chess board widget for PySide6 applications, designed to mimic the visual style and user experience of Lichess.
+A modern, feature-rich chess board widget for PySide6 applications, designed to mimic the visual style and user experience of Lichess. It is built on top of the powerful [python-chess](https://github.com/niklasf/python-chess) library.
 
 ## Features
 
