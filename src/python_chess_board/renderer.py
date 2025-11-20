@@ -2,7 +2,7 @@ from typing import Dict, Optional, Tuple
 
 import chess
 from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QColor, QPainter, QPen, QBrush
+from PySide6.QtGui import QBrush, QColor, QPainter, QPen
 from PySide6.QtSvg import QSvgRenderer
 
 

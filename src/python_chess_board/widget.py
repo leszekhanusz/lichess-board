@@ -1,14 +1,14 @@
-from typing import Optional, List
+from typing import List, Optional
 
 import chess
 from PySide6.QtCore import (
-    Qt,
-    Signal,
     QPointF,
     QRectF,
+    Qt,
     QTimer,
+    Signal,
 )
-from PySide6.QtGui import QPaintEvent, QPainter, QMouseEvent, QResizeEvent
+from PySide6.QtGui import QMouseEvent, QPainter, QPaintEvent, QResizeEvent
 from PySide6.QtWidgets import QWidget
 
 from .renderer import Renderer

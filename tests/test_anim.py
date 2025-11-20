@@ -1,8 +1,10 @@
 import sys
+
 import chess
-from PySide6.QtWidgets import QApplication
-from python_chess_board import ChessBoardWidget
 from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication
+
+from python_chess_board import ChessBoardWidget
 
 
 def test_animation() -> None:

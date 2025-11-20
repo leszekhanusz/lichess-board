@@ -1,6 +1,7 @@
+import os
+
 import chess
 import chess.svg
-import os
 
 ASSETS_DIR = "src/python_chess_board/assets"
 os.makedirs(ASSETS_DIR, exist_ok=True)

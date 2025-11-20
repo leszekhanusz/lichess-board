@@ -1,13 +1,15 @@
 import sys
+
+import chess
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
+    QPushButton,
     QVBoxLayout,
     QWidget,
-    QPushButton,
 )
+
 from python_chess_board import ChessBoardWidget
-import chess
 
 
 class MainWindow(QMainWindow):
