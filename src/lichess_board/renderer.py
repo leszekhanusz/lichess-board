@@ -36,7 +36,7 @@ class Renderer:
         ]
 
         # Use importlib.resources to access package assets
-        assets_path = files("python_chess_board").joinpath("assets")
+        assets_path = files("lichess_board").joinpath("assets")
 
         for p in pieces:
             svg_file = assets_path.joinpath(f"{p}.svg")

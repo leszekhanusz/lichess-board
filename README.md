@@ -40,7 +40,7 @@ Here is a simple example of how to use the `ChessBoardWidget` in a PySide6 appli
 import sys
 import chess
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
-from python_chess_board import ChessBoardWidget
+from lichess_board import ChessBoardWidget
 
 class MainWindow(QMainWindow):
     def __init__(self):

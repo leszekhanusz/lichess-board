@@ -3,7 +3,7 @@ import sys
 import chess
 from pytestqt.qtbot import QtBot
 
-from python_chess_board import ChessBoardWidget
+from lichess_board import ChessBoardWidget
 
 
 def test_check_indicator(qtbot: QtBot) -> None:
