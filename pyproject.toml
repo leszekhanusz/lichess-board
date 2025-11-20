@@ -2,7 +2,7 @@
 name = "python-chess-board"
 version = "0.1.0"
 description = "A PySide6 chess board widget"
-authors = [{name = "Leszek", email = "leszek@example.com"}]
+authors = [{name = "Leszek", email = "leszek.hanusz@gmail.com"}]
 dependencies = [
     "PySide6",
     "python-chess",
