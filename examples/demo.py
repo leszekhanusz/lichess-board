@@ -1,11 +1,11 @@
+import os
 import random
 import sys
 from typing import List
 
 import chess
-from PySide6.QtCore import QByteArray, QSize, Qt, QTimer
-from PySide6.QtGui import QIcon
-from PySide6.QtSvg import QSvgRenderer
+from PySide6.QtCore import QTimer
+from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -18,56 +18,23 @@ from PySide6.QtWidgets import (
 
 from lichess_board import ChessBoardWidget
 
-# SVG Icons matching the style
-ICON_FIRST = """
-<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M18.5 19V5M5.5 12L14.5 19V5L5.5 12Z" fill="#666666"/>
-</svg>
-"""
-
-ICON_PREV = """
-<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M15 19V5L6 12L15 19Z" fill="#666666"/>
-</svg>
-"""
-
-ICON_NEXT = """
-<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M9 5V19L18 12L9 5Z" fill="#666666"/>
-</svg>
-"""
-
-ICON_LAST = """
-<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M5.5 5V19M18.5 12L9.5 5V19L18.5 12Z" fill="#666666"/>
-</svg>
-"""
-
-
-def create_icon(svg_content: str) -> QIcon:
-    renderer = QSvgRenderer(QByteArray(svg_content.encode()))
-    pixmap = QIcon.fromTheme("document-new").pixmap(24, 24)  # Dummy pixmap
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = pixmap.createMaskFromColor(
-        Qt.GlobalColor.transparent, Qt.MaskMode.MaskOutColor
-    )  # Just to get a painter
-
-    # Actually we need to render to a pixmap
-    from PySide6.QtGui import QPainter, QPixmap
-
-    pixmap = QPixmap(24, 24)
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap)
-    renderer.render(painter)
-    painter.end()
-    return QIcon(pixmap)
-
 
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Python Chess Board Example")
         self.resize(600, 700)
+
+        # Load Lichess font
+        font_path = os.path.join(os.path.dirname(__file__), "assets", "lichess.ttf")
+        font_id = QFontDatabase.addApplicationFont(font_path)
+        if font_id != -1:
+            font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+            self.icon_font = QFont(font_family)
+            self.icon_font.setPixelSize(24)
+        else:
+            print("Failed to load Lichess font")
+            self.icon_font = QFont()  # Fallback
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -94,6 +61,7 @@ class MainWindow(QMainWindow):
                 border: none;
                 border-radius: 5px;
                 padding: 5px;
+                color: #666666;
             }
             QPushButton:hover {
                 background-color: hsl(209, 66%, 84%);
@@ -106,36 +74,38 @@ class MainWindow(QMainWindow):
             }
         """
 
-        self.btn_first = QPushButton()
-        self.btn_first.setIcon(create_icon(ICON_FIRST))
-        self.btn_first.setIconSize(QSize(24, 24))
+        # Icons from Lichess font:
+        # First: \ue035
+        # Prev: \ue027
+        # Next: \ue026
+        # Last: \ue034
+
+        self.btn_first = QPushButton("\ue035")
+        self.btn_first.setFont(self.icon_font)
         self.btn_first.setStyleSheet(button_style)
         self.btn_first.clicked.connect(self.go_first)
         self.btn_first.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
 
-        self.btn_prev = QPushButton()
-        self.btn_prev.setIcon(create_icon(ICON_PREV))
-        self.btn_prev.setIconSize(QSize(24, 24))
+        self.btn_prev = QPushButton("\ue027")
+        self.btn_prev.setFont(self.icon_font)
         self.btn_prev.setStyleSheet(button_style)
         self.btn_prev.clicked.connect(self.go_prev)
         self.btn_prev.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
 
-        self.btn_next = QPushButton()
-        self.btn_next.setIcon(create_icon(ICON_NEXT))
-        self.btn_next.setIconSize(QSize(24, 24))
+        self.btn_next = QPushButton("\ue026")
+        self.btn_next.setFont(self.icon_font)
         self.btn_next.setStyleSheet(button_style)
         self.btn_next.clicked.connect(self.go_next)
         self.btn_next.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
 
-        self.btn_last = QPushButton()
-        self.btn_last.setIcon(create_icon(ICON_LAST))
-        self.btn_last.setIconSize(QSize(24, 24))
+        self.btn_last = QPushButton("\ue034")
+        self.btn_last.setFont(self.icon_font)
         self.btn_last.setStyleSheet(button_style)
         self.btn_last.clicked.connect(self.go_last)
         self.btn_last.setSizePolicy(
