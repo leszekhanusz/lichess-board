@@ -1,0 +1,10 @@
+PySide6
+python-chess
+
+[dev]
+black
+flake8
+isort
+mypy
+pytest
+pytest-qt

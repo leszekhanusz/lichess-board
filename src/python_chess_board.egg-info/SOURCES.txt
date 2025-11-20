@@ -1,0 +1,10 @@
+pyproject.toml
+src/python_chess_board/__init__.py
+src/python_chess_board/renderer.py
+src/python_chess_board/widget.py
+src/python_chess_board.egg-info/PKG-INFO
+src/python_chess_board.egg-info/SOURCES.txt
+src/python_chess_board.egg-info/dependency_links.txt
+src/python_chess_board.egg-info/requires.txt
+src/python_chess_board.egg-info/top_level.txt
+tests/test_anim.py
