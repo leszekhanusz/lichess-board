@@ -7,7 +7,7 @@ dependencies = [
     "PySide6",
     "python-chess",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 
 [project.optional-dependencies]
 dev = [

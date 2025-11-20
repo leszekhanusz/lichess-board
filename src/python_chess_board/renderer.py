@@ -1,15 +1,10 @@
+from importlib.resources import files
 from typing import Dict, Optional, Tuple
 
 import chess
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QBrush, QColor, QPainter, QPen
 from PySide6.QtSvg import QSvgRenderer
-
-try:
-    from importlib.resources import files
-except ImportError:
-    # Python < 3.9 fallback
-    from importlib_resources import files  # type: ignore
 
 
 class Renderer:
