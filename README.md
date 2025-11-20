@@ -20,13 +20,19 @@ A modern, feature-rich chess board widget for PySide6 applications, designed to 
 
 This package requires Python 3.9 or later.
 
-You can install the package directly from the source:
+You can install the package from PyPI:
+
+```bash
+pip install lichess-board
+```
+
+Or install directly from the source:
 
 ```bash
 pip install .
 ```
 
-Or if you are developing:
+If you are developing:
 
 ```bash
 pip install -e .[dev]
