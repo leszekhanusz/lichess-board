@@ -1,17 +1,12 @@
-from typing import Optional, Tuple, List
+from typing import Optional, List
 
 import chess
 from PySide6.QtCore import (
     Qt,
     Signal,
     QPointF,
-    QSize,
     QRectF,
     QTimer,
-    QPropertyAnimation,
-    Property,
-    QEasingCurve,
-    QObject,
 )
 from PySide6.QtGui import QPaintEvent, QPainter, QMouseEvent, QResizeEvent
 from PySide6.QtWidgets import QWidget
@@ -199,7 +194,8 @@ class ChessBoardWidget(QWidget):
             self.update()
         else:
             # Just update for hover effects if needed
-            # Only update if hover state changed significantly or if we want to show hover highlight for moves
+            # Only update if hover state changed significantly
+            # or if we want to show hover highlight for moves
             self.update()
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
@@ -220,8 +216,8 @@ class ChessBoardWidget(QWidget):
                     self.update()
                 else:
                     # Invalid drop, reset
-                    # If we want to keep selection when dropping on invalid square, we can.
-                    # But usually dropping on invalid square deselects or just snaps back.
+                    # If we want to keep selection when dropping on invalid square
+                    # But usually dropping on invalid square deselects
                     # Lichess: snaps back, keeps selection?
                     # Let's keep selection but stop dragging.
                     self._is_dragging = False
@@ -233,7 +229,7 @@ class ChessBoardWidget(QWidget):
     def resizeEvent(self, event: QResizeEvent) -> None:
         # Maintain aspect ratio? Or just fill?
         # Board is usually square.
-        # Let's assume the widget can be any shape but we draw square board centered or top-left.
+        # Let's assume the widget can be any shape but we draw square board centered
         # For now, renderer assumes square rect.
         # We should probably force aspect ratio or handle non-square rects in renderer.
         # Renderer uses rect.width() / 8 for square size.
@@ -241,7 +237,7 @@ class ChessBoardWidget(QWidget):
         super().resizeEvent(event)
 
         # We can make the content rect square
-        s = min(self.width(), self.height())
+
         # But for now let's just update.
         self.update()
 

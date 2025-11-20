@@ -2,7 +2,7 @@ from typing import Dict, Optional, Tuple
 
 import chess
 from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QColor, QPainter, QPen, QBrush, QFont
+from PySide6.QtGui import QColor, QPainter, QPen, QBrush
 from PySide6.QtSvg import QSvgRenderer
 
 
@@ -32,9 +32,9 @@ class Renderer:
             "bQ",
             "bK",
         ]
-        base_path = "src/python_chess_board/assets"
-        # In a real package, we would use importlib.resources or similar
-        # For now, we assume the path relative to the working directory or handle it in widget
+
+        # In a real package, we would use importlib.resources
+        # For now, we assume the path relative to the working directory
         import os
 
         # Try to find assets relative to this file
@@ -62,9 +62,6 @@ class Renderer:
                 # Draw coordinates
                 rank_text = ""
                 file_text = ""
-
-                visible_row = row
-                visible_col = col
 
                 actual_rank = 8 - row if not flipped else row + 1
                 actual_file = (
@@ -132,7 +129,10 @@ class Renderer:
                 x = visual_col * square_size
                 y = visual_row * square_size
 
-                piece_code = f"{'w' if piece.color == chess.WHITE else 'b'}{piece.symbol().upper()}"
+                piece_code = (
+                    f"{'w' if piece.color == chess.WHITE else 'b'}"
+                    f"{piece.symbol().upper()}"
+                )
                 renderer = self.piece_renderers.get(piece_code)
                 if renderer:
                     if square == faded_square:
