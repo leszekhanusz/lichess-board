@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
     QPushButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -80,11 +81,13 @@ class MainWindow(QMainWindow):
 
         # Navigation Bar
         nav_widget = QWidget()
+        nav_widget.setFixedHeight(50)  # Restricted height
         nav_layout = QHBoxLayout(nav_widget)
         nav_layout.setContentsMargins(0, 10, 0, 0)
-        nav_layout.setSpacing(0)
+        nav_layout.setSpacing(5)  # Small spacing between buttons
 
         # Stylesheet for buttons
+        # hsl(209, 66%, 84%) -> #bbdcf9 (approx) but Qt supports hsl/hsla
         button_style = """
             QPushButton {
                 background-color: transparent;
@@ -93,10 +96,10 @@ class MainWindow(QMainWindow):
                 padding: 5px;
             }
             QPushButton:hover {
-                background-color: #e0e0e0;
+                background-color: hsl(209, 66%, 84%);
             }
             QPushButton:pressed {
-                background-color: #d0d0d0;
+                background-color: hsl(209, 66%, 70%);
             }
             QPushButton:disabled {
                 opacity: 0.5;
@@ -108,36 +111,42 @@ class MainWindow(QMainWindow):
         self.btn_first.setIconSize(QSize(24, 24))
         self.btn_first.setStyleSheet(button_style)
         self.btn_first.clicked.connect(self.go_first)
+        self.btn_first.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
 
         self.btn_prev = QPushButton()
         self.btn_prev.setIcon(create_icon(ICON_PREV))
         self.btn_prev.setIconSize(QSize(24, 24))
         self.btn_prev.setStyleSheet(button_style)
         self.btn_prev.clicked.connect(self.go_prev)
+        self.btn_prev.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
 
         self.btn_next = QPushButton()
         self.btn_next.setIcon(create_icon(ICON_NEXT))
         self.btn_next.setIconSize(QSize(24, 24))
         self.btn_next.setStyleSheet(button_style)
         self.btn_next.clicked.connect(self.go_next)
+        self.btn_next.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
 
         self.btn_last = QPushButton()
         self.btn_last.setIcon(create_icon(ICON_LAST))
         self.btn_last.setIconSize(QSize(24, 24))
         self.btn_last.setStyleSheet(button_style)
         self.btn_last.clicked.connect(self.go_last)
+        self.btn_last.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
 
-        # Add buttons to layout with spacers to center them or spread them?
-        # The image shows them centered or spread. Let's spread them evenly.
-        nav_layout.addStretch()
-        nav_layout.addWidget(self.btn_first)
-        nav_layout.addStretch()
-        nav_layout.addWidget(self.btn_prev)
-        nav_layout.addStretch()
-        nav_layout.addWidget(self.btn_next)
-        nav_layout.addStretch()
-        nav_layout.addWidget(self.btn_last)
-        nav_layout.addStretch()
+        # Add buttons to layout with equal stretch
+        nav_layout.addWidget(self.btn_first, 1)
+        nav_layout.addWidget(self.btn_prev, 1)
+        nav_layout.addWidget(self.btn_next, 1)
+        nav_layout.addWidget(self.btn_last, 1)
 
         layout.addWidget(nav_widget)
 
