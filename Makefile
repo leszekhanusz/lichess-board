@@ -27,7 +27,7 @@ check:
 	@echo "\n=== Running flake8 ==="
 	flake8 .
 	@echo "\n=== Running mypy ==="
-	mypy .
+	mypy src tests examples
 	@echo "\n✓ All checks passed!"
 
 test:

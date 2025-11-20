@@ -20,3 +20,5 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: [types-setuptools]
+        files: ^(src|tests|examples)/
+
