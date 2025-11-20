@@ -1,27 +1,34 @@
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QVBoxLayout,
+    QWidget,
+    QPushButton,
+)
 from python_chess_board import ChessBoardWidget
 import chess
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Python Chess Board Example")
         self.resize(600, 650)
-        
+
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         layout = QVBoxLayout(central_widget)
-        
+
         self.board_widget = ChessBoardWidget()
         layout.addWidget(self.board_widget)
-        
+
         self.flip_btn = QPushButton("Flip Board")
         self.flip_btn.clicked.connect(self.toggle_flip)
         layout.addWidget(self.flip_btn)
-        
+
         self.board_widget.move_played.connect(self.on_move_played)
-        
+
         self.flipped = False
 
     def toggle_flip(self):
@@ -30,6 +37,7 @@ class MainWindow(QMainWindow):
 
     def on_move_played(self, move: chess.Move):
         print(f"Move played: {move}")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

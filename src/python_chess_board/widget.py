@@ -1,25 +1,40 @@
 from typing import Optional, Tuple, List
 
 import chess
-from PySide6.QtCore import Qt, Signal, QPointF, QSize, QRectF, QTimer, QPropertyAnimation, Property, QEasingCurve, QObject
+from PySide6.QtCore import (
+    Qt,
+    Signal,
+    QPointF,
+    QSize,
+    QRectF,
+    QTimer,
+    QPropertyAnimation,
+    Property,
+    QEasingCurve,
+    QObject,
+)
 from PySide6.QtGui import QPaintEvent, QPainter, QMouseEvent, QResizeEvent
 from PySide6.QtWidgets import QWidget
 
 from .renderer import Renderer
 
+
 class ChessBoardWidget(QWidget):
     """
     A PySide6 widget that displays a chess board and allows interaction.
     """
+
     move_played = Signal(chess.Move)
 
-    def __init__(self, parent: Optional[QWidget] = None, board: Optional[chess.Board] = None):
+    def __init__(
+        self, parent: Optional[QWidget] = None, board: Optional[chess.Board] = None
+    ):
         super().__init__(parent)
-        
+
         self._board = board if board else chess.Board()
         self._renderer = Renderer()
         self._flipped = False
-        
+
         # Interaction state
         self._selected_square: Optional[int] = None
         self._dragged_square: Optional[int] = None
@@ -27,18 +42,18 @@ class ChessBoardWidget(QWidget):
         self._is_dragging = False
         self._legal_moves: List[chess.Move] = []
         self._hover_square: Optional[int] = None
-        
+
         # Animation state
         self._animating_piece: Optional[chess.Piece] = None
         self._anim_start_pos: QPointF = QPointF()
         self._anim_current_pos: QPointF = QPointF()
         self._anim_end_pos: QPointF = QPointF()
         self._anim_timer = QTimer()
-        self._anim_timer.setInterval(16) # ~60 FPS
+        self._anim_timer.setInterval(16)  # ~60 FPS
         self._anim_timer.timeout.connect(self._update_animation)
         self._anim_progress = 0.0
         self._anim_move: Optional[chess.Move] = None
-        
+
         self.setMouseTracking(True)  # Enable mouse tracking for hover effects
         self.setMinimumSize(200, 200)
 
@@ -56,66 +71,104 @@ class ChessBoardWidget(QWidget):
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
+
         rect = self._get_board_rect()
-        
+
         # Draw board and coordinates
         self._renderer.draw_board(painter, rect, self._flipped)
-        
+
         # Highlight last move
         if self._board.move_stack:
-            self._renderer.highlight_last_move(painter, rect, self._board.peek(), self._flipped)
-            
+            self._renderer.highlight_last_move(
+                painter, rect, self._board.peek(), self._flipped
+            )
+
         # Highlight selected square
         if self._selected_square is not None:
-            self._renderer.highlight_square(painter, rect, self._selected_square, self._renderer.selected_color, self._flipped)
-            
+            self._renderer.highlight_square(
+                painter,
+                rect,
+                self._selected_square,
+                self._renderer.selected_color,
+                self._flipped,
+            )
+
         # Highlight hover square (if it's a legal move target)
         if self._hover_square is not None:
-             # Check if hover square is a valid target for the selected piece
-             if self._selected_square is not None:
-                 move = self._find_move(self._selected_square, self._hover_square)
-                 if move:
-                     self._renderer.highlight_square(painter, rect, self._hover_square, self._renderer.selected_color, self._flipped)
+            # Check if hover square is a valid target for the selected piece
+            if self._selected_square is not None:
+                move = self._find_move(self._selected_square, self._hover_square)
+                if move:
+                    self._renderer.highlight_square(
+                        painter,
+                        rect,
+                        self._hover_square,
+                        self._renderer.selected_color,
+                        self._flipped,
+                    )
 
         # Draw pieces
         # If dragging, draw the dragged piece in its square as faded
         faded = self._dragged_square if self._is_dragging else None
         exclude = None
-        
+
         # If animating, don't draw the piece at the source square
         if self._animating_piece and self._anim_move:
             exclude = self._anim_move.from_square
-            
-        self._renderer.draw_pieces(painter, rect, self._board, self._flipped, exclude_square=exclude, faded_square=faded)
-        
+
+        self._renderer.draw_pieces(
+            painter,
+            rect,
+            self._board,
+            self._flipped,
+            exclude_square=exclude,
+            faded_square=faded,
+        )
+
         # Draw legal moves hints
         if self._selected_square is not None:
-            self._renderer.draw_legal_moves(painter, rect, self._legal_moves, self._flipped, self._board, hide_square=self._hover_square)
-            
+            self._renderer.draw_legal_moves(
+                painter,
+                rect,
+                self._legal_moves,
+                self._flipped,
+                self._board,
+                hide_square=self._hover_square,
+            )
+
         # Draw dragged piece
         if self._is_dragging and self._dragged_square is not None:
             piece = self._board.piece_at(self._dragged_square)
             if piece:
                 square_size = rect.width() / 8
-                self._renderer.draw_dragged_piece(painter, piece, (self._drag_pos.x(), self._drag_pos.y()), square_size)
+                self._renderer.draw_dragged_piece(
+                    painter,
+                    piece,
+                    (self._drag_pos.x(), self._drag_pos.y()),
+                    square_size,
+                )
 
         # Draw animating piece
         if self._animating_piece:
             square_size = rect.width() / 8
-            self._renderer.draw_dragged_piece(painter, self._animating_piece, (self._anim_current_pos.x(), self._anim_current_pos.y()), square_size)
+            self._renderer.draw_dragged_piece(
+                painter,
+                self._animating_piece,
+                (self._anim_current_pos.x(), self._anim_current_pos.y()),
+                square_size,
+            )
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() != Qt.MouseButton.LeftButton:
             return
-            
+
         square = self._pos_to_square(event.position())
         if square is None:
             self._clear_selection()
             return
-            
+
         piece = self._board.piece_at(square)
-        
+
         # If clicking on a square that is a legal move for currently selected piece
         if self._selected_square is not None:
             move = self._find_move(self._selected_square, square)
@@ -130,7 +183,9 @@ class ChessBoardWidget(QWidget):
             self._dragged_square = square
             self._is_dragging = True
             self._drag_pos = event.position()
-            self._legal_moves = [m for m in self._board.legal_moves if m.from_square == square]
+            self._legal_moves = [
+                m for m in self._board.legal_moves if m.from_square == square
+            ]
             self.update()
         else:
             self._clear_selection()
@@ -138,7 +193,7 @@ class ChessBoardWidget(QWidget):
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         square = self._pos_to_square(event.position())
         self._hover_square = square
-        
+
         if self._is_dragging:
             self._drag_pos = event.position()
             self.update()
@@ -150,9 +205,9 @@ class ChessBoardWidget(QWidget):
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         if not self._is_dragging:
             return
-            
+
         square = self._pos_to_square(event.position())
-        
+
         if square is not None and self._dragged_square is not None:
             move = self._find_move(self._dragged_square, square)
             if move:
@@ -184,7 +239,7 @@ class ChessBoardWidget(QWidget):
         # Renderer uses rect.width() / 8 for square size.
         # Let's enforce square aspect ratio in resize or just use the smaller dimension.
         super().resizeEvent(event)
-        
+
         # We can make the content rect square
         s = min(self.width(), self.height())
         # But for now let's just update.
@@ -192,36 +247,36 @@ class ChessBoardWidget(QWidget):
 
     def _pos_to_square(self, pos: QPointF) -> Optional[int]:
         rect = self._get_board_rect()
-        
+
         if not rect.contains(pos):
             return None
-            
+
         square_size = rect.width() / 8
-        
+
         # Relative position
         rel_x = pos.x() - rect.x()
         rel_y = pos.y() - rect.y()
-        
+
         col = int(rel_x / square_size)
         row = int(rel_y / square_size)
-        
+
         if col < 0 or col > 7 or row < 0 or row > 7:
             return None
-            
+
         if self._flipped:
-            rank = row + 1 # row 0 -> rank 1
-            file = 7 - col # col 0 -> file h
+            rank = row + 1  # row 0 -> rank 1
+            file = 7 - col  # col 0 -> file h
         else:
-            rank = 8 - row # row 0 -> rank 8
-            file = col     # col 0 -> file a
-            
+            rank = 8 - row  # row 0 -> rank 8
+            file = col  # col 0 -> file a
+
         return chess.square(file, rank - 1)
 
     def _find_move(self, from_sq: int, to_sq: int) -> Optional[chess.Move]:
         # Handle promotion: auto-promote to Queen for now or check all variants
         # python-chess moves include promotion.
         # If we need promotion, we should check if a move is a promotion move.
-        
+
         for move in self._board.legal_moves:
             if move.from_square == from_sq and move.to_square == to_sq:
                 return move
@@ -245,7 +300,7 @@ class ChessBoardWidget(QWidget):
             self.update()
 
     def _update_animation(self) -> None:
-        self._anim_progress += 0.05 # Adjust speed
+        self._anim_progress += 0.05  # Adjust speed
         if self._anim_progress >= 1.0:
             self._anim_progress = 1.0
             self._anim_timer.stop()
@@ -256,28 +311,34 @@ class ChessBoardWidget(QWidget):
             self._anim_move = None
             self.update()
             return
-            
+
         # Interpolate
         # Linear interpolation
-        x = self._anim_start_pos.x() + (self._anim_end_pos.x() - self._anim_start_pos.x()) * self._anim_progress
-        y = self._anim_start_pos.y() + (self._anim_end_pos.y() - self._anim_start_pos.y()) * self._anim_progress
+        x = (
+            self._anim_start_pos.x()
+            + (self._anim_end_pos.x() - self._anim_start_pos.x()) * self._anim_progress
+        )
+        y = (
+            self._anim_start_pos.y()
+            + (self._anim_end_pos.y() - self._anim_start_pos.y()) * self._anim_progress
+        )
         self._anim_current_pos = QPointF(x, y)
         self.update()
 
     def _get_square_center(self, square: int) -> QPointF:
         rect = self._get_board_rect()
         square_size = rect.width() / 8
-        
+
         rank = chess.square_rank(square)
         file = chess.square_file(square)
-        
+
         if self._flipped:
             visual_row = rank
             visual_col = 7 - file
         else:
             visual_row = 7 - rank
             visual_col = file
-            
+
         x = rect.x() + visual_col * square_size + square_size / 2
         y = rect.y() + visual_row * square_size + square_size / 2
         return QPointF(x, y)
@@ -286,10 +347,10 @@ class ChessBoardWidget(QWidget):
         w = self.width()
         h = self.height()
         s = min(w, h)
-        
+
         x = (w - s) / 2
         y = (h - s) / 2
-        
+
         return QRectF(x, y, s, s)
 
     def _clear_selection(self) -> None:
