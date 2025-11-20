@@ -3,7 +3,7 @@ from typing import Dict, Optional, Tuple
 
 import chess
 from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QBrush, QColor, QPainter, QPen
+from PySide6.QtGui import QBrush, QColor, QPainter, QPen, QRadialGradient
 from PySide6.QtSvg import QSvgRenderer
 
 
@@ -14,6 +14,7 @@ class Renderer:
         self.highlight_color = QColor(155, 199, 0, 105)  # Lime with alpha
         self.selected_color = QColor(20, 85, 30, 128)  # Green with alpha
         self.move_hint_color = QColor(20, 85, 30, 50)  # Faint green
+        self.check_color = QColor(255, 0, 0, 100)  # Red with alpha for check
 
         self.piece_renderers: Dict[str, QSvgRenderer] = {}
         self.load_assets()
@@ -247,3 +248,51 @@ class Renderer:
         y = rect.y() + visual_row * square_size
 
         painter.fillRect(QRectF(x, y, square_size, square_size), color)
+
+    def draw_check_indicator(
+        self, painter: QPainter, rect: QRectF, square: int, flipped: bool
+    ) -> None:
+        """Draw a red blurred circle behind the king when in check."""
+        square_size = rect.width() / 8
+        rank = chess.square_rank(square)
+        file = chess.square_file(square)
+
+        if flipped:
+            visual_row = rank
+            visual_col = 7 - file
+        else:
+            visual_row = 7 - rank
+            visual_col = file
+
+        x = rect.x() + visual_col * square_size
+        y = rect.y() + visual_row * square_size
+
+        # Draw a radial gradient circle for the check indicator
+        center_x = x + square_size / 2
+        center_y = y + square_size / 2
+        # Base radius smaller to ensure it stays within the square
+        radius = square_size * 0.7
+
+        # Save painter state
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # Create a radial gradient for smooth blur effect
+        gradient = QRadialGradient(center_x, center_y, radius)
+        # Center is opaque red
+        gradient.setColorAt(0, QColor(255, 0, 0, 150))
+        # Edge fades to transparent
+        gradient.setColorAt(1, QColor(255, 0, 0, 0))
+
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QBrush(gradient))
+        painter.drawEllipse(
+            QRectF(
+                center_x - radius,
+                center_y - radius,
+                radius * 2,
+                radius * 2,
+            )
+        )
+
+        painter.restore()

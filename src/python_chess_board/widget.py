@@ -96,6 +96,15 @@ class ChessBoardWidget(QWidget):
                         self._flipped,
                     )
 
+        # Draw check indicator if king is in check
+        if self._board.is_check():
+            # Find the king square for the side in check
+            king_square = self._board.king(self._board.turn)
+            if king_square is not None:
+                self._renderer.draw_check_indicator(
+                    painter, rect, king_square, self._flipped
+                )
+
         # Draw pieces
         # If dragging, draw the dragged piece in its square as faded
         faded = self._dragged_square if self._is_dragging else None
