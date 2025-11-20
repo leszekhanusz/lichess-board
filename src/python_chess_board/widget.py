@@ -1,13 +1,7 @@
 from typing import List, Optional
 
 import chess
-from PySide6.QtCore import (
-    QPointF,
-    QRectF,
-    Qt,
-    QTimer,
-    Signal,
-)
+from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import QMouseEvent, QPainter, QPaintEvent, QResizeEvent
 from PySide6.QtWidgets import QWidget
 
@@ -266,7 +260,7 @@ class ChessBoardWidget(QWidget):
             rank = 8 - row  # row 0 -> rank 8
             file = col  # col 0 -> file a
 
-        return chess.square(file, rank - 1)
+        return int(chess.square(file, rank - 1))
 
     def _find_move(self, from_sq: int, to_sq: int) -> Optional[chess.Move]:
         # Handle promotion: auto-promote to Queen for now or check all variants

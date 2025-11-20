@@ -54,8 +54,8 @@ class Renderer:
                 is_light = (row + col) % 2 == 0
                 color = self.light_color if is_light else self.dark_color
 
-                x = col * square_size
-                y = row * square_size
+                x = rect.x() + col * square_size
+                y = rect.y() + row * square_size
 
                 painter.fillRect(QRectF(x, y, square_size, square_size), color)
 
@@ -126,8 +126,8 @@ class Renderer:
                     visual_row = 7 - rank
                     visual_col = file
 
-                x = visual_col * square_size
-                y = visual_row * square_size
+                x = rect.x() + visual_col * square_size
+                y = rect.y() + visual_row * square_size
 
                 piece_code = (
                     f"{'w' if piece.color == chess.WHITE else 'b'}"
@@ -187,8 +187,8 @@ class Renderer:
                 visual_row = 7 - rank
                 visual_col = file
 
-            x = visual_col * square_size
-            y = visual_row * square_size
+            x = rect.x() + visual_col * square_size
+            y = rect.y() + visual_row * square_size
             center_x = x + square_size / 2
             center_y = y + square_size / 2
 
@@ -244,7 +244,7 @@ class Renderer:
             visual_row = 7 - rank
             visual_col = file
 
-        x = visual_col * square_size
-        y = visual_row * square_size
+        x = rect.x() + visual_col * square_size
+        y = rect.y() + visual_row * square_size
 
         painter.fillRect(QRectF(x, y, square_size, square_size), color)
