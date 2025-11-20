@@ -28,18 +28,6 @@ You can install the package from PyPI:
 pip install lichess-board
 ```
 
-Or install directly from the source:
-
-```bash
-pip install .
-```
-
-If you are developing:
-
-```bash
-pip install -e .[dev]
-```
-
 ## Usage
 
 Here is a simple example of how to use the `ChessBoardWidget` in a PySide6 application:
