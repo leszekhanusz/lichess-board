@@ -20,7 +20,7 @@ A modern, feature-rich chess board widget for PySide6 applications, designed to 
 
 ## Installation
 
-This package requires Python 3.9 or later.
+This package requires Python 3.10 or later.
 
 You can install the package from PyPI:
 

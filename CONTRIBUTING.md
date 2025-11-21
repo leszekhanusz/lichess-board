@@ -8,7 +8,7 @@ This project uses `make` for common development tasks.
 
 ### Prerequisites
 
-- Python >= 3.9
+- Python >= 3.10
 - `pip`
 
 ### Setup
