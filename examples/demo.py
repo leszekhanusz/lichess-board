@@ -42,20 +42,14 @@ class MainWindow(QMainWindow):
         layout.setSpacing(0)
         layout.setContentsMargins(20, 20, 20, 20)
 
-        # Board
-        self.board_widget = ChessBoardWidget()
-        layout.addWidget(self.board_widget)
+        # Flip button at the top
+        flip_widget = QWidget()
+        flip_widget.setFixedHeight(50)  # Same height as nav bar
+        flip_layout = QHBoxLayout(flip_widget)
+        flip_layout.setContentsMargins(0, 0, 0, 10)
+        flip_layout.setSpacing(0)
 
-        # Navigation Bar
-        nav_widget = QWidget()
-        nav_widget.setFixedHeight(50)  # Restricted height
-        nav_layout = QHBoxLayout(nav_widget)
-        nav_layout.setContentsMargins(0, 10, 0, 0)
-        nav_layout.setSpacing(5)  # Small spacing between buttons
-
-        # Stylesheet for buttons
-        # hsl(209, 66%, 84%) -> #bbdcf9 (approx)
-        # Font color: hsl(0, 0%, 37%) -> rgb(94, 94, 94)
+        # Stylesheet for flip button (same as navigation buttons)
         button_style = """
             QPushButton {
                 background-color: transparent;
@@ -77,6 +71,37 @@ class MainWindow(QMainWindow):
                 background-color: hsl(209, 66%, 70%);
             }
         """
+
+        # Flip icon using standard Unicode symbol
+        self.flip_btn = QPushButton("⇅ Flip Board")
+        flip_font = QFont(self.icon_font)
+        flip_font.setBold(True)
+        self.flip_btn.setFont(flip_font)
+        self.flip_btn.setStyleSheet(button_style)
+        self.flip_btn.clicked.connect(self.toggle_flip)
+        self.flip_btn.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
+        )
+
+        # Center the flip button horizontally
+        flip_layout.addStretch()
+        flip_layout.addWidget(self.flip_btn)
+        flip_layout.addStretch()
+
+        layout.addWidget(flip_widget)
+
+        # Board
+        self.board_widget = ChessBoardWidget()
+        layout.addWidget(self.board_widget)
+
+        # Navigation Bar
+        nav_widget = QWidget()
+        nav_widget.setFixedHeight(50)  # Restricted height
+        nav_layout = QHBoxLayout(nav_widget)
+        nav_layout.setContentsMargins(0, 10, 0, 0)
+        nav_layout.setSpacing(5)  # Small spacing between buttons
+
+        # Navigation buttons use the same button_style defined above
 
         # Icons from Lichess font:
         # First: \ue035
@@ -124,11 +149,6 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(nav_widget)
 
-        # Flip button below
-        self.flip_btn = QPushButton("Flip Board")
-        self.flip_btn.clicked.connect(self.toggle_flip)
-        layout.addWidget(self.flip_btn)
-
         self.board_widget.move_played.connect(self.on_move_played)
 
         self.flipped = False
@@ -146,18 +166,18 @@ class MainWindow(QMainWindow):
 
         # Calculate the required height based on width
         # Width includes margins (20px left + 20px right = 40px)
-        # Height includes: top margin (20px) + board + nav bar (50px)
-        # + flip button (~30px) + bottom margin (20px)
+        # Height includes: top margin (20px) + flip button (50px) + board
+        # + nav bar (50px) + bottom margin (20px)
         width = self.width()
         board_size = width - 40  # Subtract horizontal margins
 
         # Total height needed:
         # - Top margin: 20
+        # - Flip button: 50
         # - Board: board_size (square)
         # - Nav bar: 50
-        # - Flip button: ~30
         # - Bottom margin: 20
-        required_height = 20 + board_size + 50 + 30 + 20
+        required_height = 20 + 50 + board_size + 50 + 20
 
         # Adjust height if needed (tolerance to avoid infinite loops)
         if abs(self.height() - required_height) > 5:
