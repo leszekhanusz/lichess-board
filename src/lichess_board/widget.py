@@ -330,6 +330,9 @@ class ChessBoardWidget(QWidget):
         animate: bool = True,
         interactive: bool = False,
     ) -> None:
+        # Clear selection to remove legal move highlights
+        self._clear_selection()
+
         # If animating, stop current animation
         if self._anim_timer.isActive():
             self._anim_timer.stop()
@@ -393,6 +396,9 @@ class ChessBoardWidget(QWidget):
             self.update()
 
     def undo_move(self, animate: bool = True) -> None:
+        # Clear selection to remove legal move highlights
+        self._clear_selection()
+
         # If animating, stop current animation
         if self._anim_timer.isActive():
             self._anim_timer.stop()
