@@ -1,5 +1,8 @@
 # Python Chess Board Widget
 
+[![Tests](https://github.com/leszekhanusz/lichess-board/actions/workflows/test.yml/badge.svg)](https://github.com/leszekhanusz/lichess-board/actions/workflows/test.yml)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/lichess-board.svg)](https://pypi.org/project/lichess-board/)
+
 A modern, feature-rich chess board widget for PySide6 applications, designed to mimic the visual style and user experience of Lichess. It is built on top of the powerful [python-chess](https://github.com/niklasf/python-chess) library.
 
 ![Fool's Mate Demo](fools_mate.gif)
