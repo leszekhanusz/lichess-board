@@ -20,6 +20,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.urls]
+Repository = "https://github.com/leszekhanusz/lichess-board"
+Issues = "https://github.com/leszekhanusz/lichess-board/issues"
+
 [project.optional-dependencies]
 dev = [
     "black==25.11.0",
