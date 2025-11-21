@@ -2,6 +2,7 @@
 name = "lichess-board"
 dynamic = ["version"]
 description = "A PySide6 chess board widget"
+readme = "README.md"
 authors = [{name = "Leszek", email = "leszek.hanusz@gmail.com"}]
 dependencies = [
     "PySide6>=6.10.1,<7",
