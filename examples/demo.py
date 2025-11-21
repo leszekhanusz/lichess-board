@@ -136,7 +136,7 @@ class MainWindow(QMainWindow):
 
         # Game history
         self.move_history: List[chess.Move] = []
-        self.current_move_index = -1  # -1 means start of game (no moves made)
+        self.current_move_index = 0  # 0 means start of game (no moves made)
 
         self.update_buttons()
 
@@ -168,22 +168,29 @@ class MainWindow(QMainWindow):
         self.board_widget.set_flipped(self.flipped)
         self.player_color = chess.BLACK if self.flipped else chess.WHITE
 
-        # Only trigger opponent move if we are at the latest position
-        if self.is_at_latest():
+        # Only trigger opponent move if we are at the last position
+        if self.is_at_last_move():
             self.check_opponent_move()
 
-    def on_move_played(self, move: chess.Move) -> None:
-        print(f"Move played: {move}")
+    def on_move_played(self, move: chess.Move, interactive: bool) -> None:
+        print(f"{'Interactive Move' if interactive else 'Move'} played: {move}")
 
-        # If we made a move from a previous position, we truncate the history
-        if self.current_move_index < len(self.move_history) - 1:
-            self.move_history = self.move_history[: self.current_move_index + 1]
+        # If we made an interactive move from a previous position,
+        # we truncate the history
+        if self.current_move_index < len(self.move_history):
+            if interactive:
+                self.move_history = self.move_history[: self.current_move_index]
+                self.move_history.append(move)
+        else:
+            self.move_history.append(move)
 
-        self.move_history.append(move)
         self.current_move_index += 1
-        self.update_buttons()
-
         self.check_opponent_move()
+
+        print(
+            f"Move history: {self.move_history} at position {self.current_move_index}"
+        )
+        self.update_buttons()
 
     def check_opponent_move(self) -> None:
         board = self.board_widget._board
@@ -195,8 +202,8 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(500, self.make_opponent_move)
 
     def make_opponent_move(self) -> None:
-        # Ensure we are still at the latest position before making a move
-        if not self.is_at_latest():
+        # Ensure we are still at the last position before making a move
+        if not self.is_at_last_move():
             return
 
         board = self.board_widget._board
@@ -209,12 +216,15 @@ class MainWindow(QMainWindow):
             print(f"Opponent plays: {random_move}")
             self.board_widget.play_move(random_move, animate=True)
 
-    def is_at_latest(self) -> bool:
-        return self.current_move_index == len(self.move_history) - 1
+    def is_at_last_move(self) -> bool:
+        return self.current_move_index == len(self.move_history)
+
+    def is_at_first_move(self) -> bool:
+        return self.current_move_index == 0
 
     def update_buttons(self) -> None:
-        has_prev = self.current_move_index >= 0
-        has_next = self.current_move_index < len(self.move_history) - 1
+        has_prev = not self.is_at_first_move()
+        has_next = not self.is_at_last_move()
 
         self.btn_first.setEnabled(has_prev)
         self.btn_prev.setEnabled(has_prev)
@@ -222,29 +232,33 @@ class MainWindow(QMainWindow):
         self.btn_last.setEnabled(has_next)
 
     def go_first(self) -> None:
-        while self.current_move_index >= 0:
+        while not self.is_at_first_move():
             self.board_widget.undo_move(animate=False)
             self.current_move_index -= 1
         self.update_buttons()
+        print(
+            f"Move history: {self.move_history} at position {self.current_move_index}"
+        )
 
     def go_prev(self) -> None:
-        if self.current_move_index >= 0:
+        if not self.is_at_first_move():
             self.board_widget.undo_move(animate=True)
             self.current_move_index -= 1
             self.update_buttons()
+        print(
+            f"Move history: {self.move_history} at position {self.current_move_index}"
+        )
 
     def go_next(self) -> None:
-        if self.current_move_index < len(self.move_history) - 1:
-            move = self.move_history[self.current_move_index + 1]
+        if not self.is_at_last_move():
+            move = self.move_history[self.current_move_index]
             self.board_widget.play_move(move, animate=True)
-            self.current_move_index += 1
             self.update_buttons()
 
     def go_last(self) -> None:
-        while self.current_move_index < len(self.move_history) - 1:
-            move = self.move_history[self.current_move_index + 1]
+        while not self.is_at_last_move():
+            move = self.move_history[self.current_move_index]
             self.board_widget.play_move(move, animate=False)
-            self.current_move_index += 1
         self.update_buttons()
 
 

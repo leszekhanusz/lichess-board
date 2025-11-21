@@ -13,7 +13,7 @@ class ChessBoardWidget(QWidget):
     A PySide6 widget that displays a chess board and allows interaction.
     """
 
-    move_played = Signal(chess.Move)
+    move_played = Signal(chess.Move, bool)
 
     def __init__(
         self, parent: Optional[QWidget] = None, board: Optional[chess.Board] = None
@@ -210,7 +210,7 @@ class ChessBoardWidget(QWidget):
         if self._selected_square is not None:
             move = self._find_move(self._selected_square, square)
             if move:
-                self._make_move(move)
+                self._make_interactive_move(move)
                 self._clear_selection()
                 return
 
@@ -249,7 +249,7 @@ class ChessBoardWidget(QWidget):
         if square is not None and self._dragged_square is not None:
             move = self._find_move(self._dragged_square, square)
             if move:
-                self._make_move(move)
+                self._make_interactive_move(move)
                 self._clear_selection()
             else:
                 # If released on same square, keep selected (click behavior)
@@ -320,10 +320,16 @@ class ChessBoardWidget(QWidget):
                 return move
         return None
 
-    def _make_move(self, move: chess.Move) -> None:
-        self.play_move(move, animate=False)
+    def _make_interactive_move(self, move: chess.Move) -> None:
+        self.play_move(move, animate=False, interactive=True)
 
-    def play_move(self, move: chess.Move, animate: bool = True) -> None:
+    def play_move(
+        self,
+        move: chess.Move,
+        *,
+        animate: bool = True,
+        interactive: bool = False,
+    ) -> None:
         # If animating, stop current animation
         if self._anim_timer.isActive():
             self._anim_timer.stop()
@@ -375,7 +381,7 @@ class ChessBoardWidget(QWidget):
 
             # Update board state immediately
             self._board.push(move)
-            self.move_played.emit(move)
+            self.move_played.emit(move, interactive)
 
             # Start animation
             self._anim_progress = 0.0
@@ -383,7 +389,7 @@ class ChessBoardWidget(QWidget):
             self.update()
         else:
             self._board.push(move)
-            self.move_played.emit(move)
+            self.move_played.emit(move, interactive)
             self.update()
 
     def undo_move(self, animate: bool = True) -> None:
