@@ -35,7 +35,7 @@ Here is a simple example of how to use the `ChessBoardWidget` in a PySide6 appli
 ```python
 import sys
 import chess
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QMainWindow
 from lichess_board import ChessBoardWidget
 
 class MainWindow(QMainWindow):
