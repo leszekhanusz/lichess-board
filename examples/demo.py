@@ -1,5 +1,6 @@
 import os
 import random
+import signal
 import sys
 from typing import List
 
@@ -283,6 +284,9 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
+    # Enable Ctrl-C to close the application
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
