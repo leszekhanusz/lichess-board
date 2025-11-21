@@ -2,7 +2,7 @@ import os
 import random
 import signal
 import sys
-from typing import List
+from typing import Any, Dict, List
 
 import chess
 from PySide6.QtCore import QTimer
@@ -193,7 +193,8 @@ class MainWindow(QMainWindow):
         if self.is_at_last_move():
             self.check_opponent_move()
 
-    def on_move_played(self, move: chess.Move, interactive: bool) -> None:
+    def on_move_played(self, move: chess.Move, move_info: Dict[str, Any]) -> None:
+        interactive = move_info.get("interactive", False)
         print(f"{'Interactive Move' if interactive else 'Move'} played: {move}")
 
         # If we made an interactive move from a previous position,

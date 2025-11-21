@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import chess
 from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
@@ -11,9 +11,16 @@ from .renderer import Renderer
 class ChessBoardWidget(QWidget):
     """
     A PySide6 widget that displays a chess board and allows interaction.
+
+    Signals:
+        move_played(chess.Move, dict): Emitted when a move is played on the board.
+            The first parameter is the chess.Move object.
+            The second parameter is a dictionary containing move information:
+                - 'interactive' (bool): True if the move was made by user interaction,
+                  False if played programmatically via play_move().
     """
 
-    move_played = Signal(chess.Move, bool)
+    move_played = Signal(chess.Move, dict)
 
     def __init__(
         self, parent: Optional[QWidget] = None, board: Optional[chess.Board] = None
@@ -343,6 +350,9 @@ class ChessBoardWidget(QWidget):
             self._anim_timer.stop()
             self._animating_pieces = []
 
+        # Prepare move info for signal
+        move_info: Dict[str, Any] = {"interactive": interactive}
+
         if animate:
             # Setup animation based on the move
             # We want to animate from from_square to to_square
@@ -389,7 +399,7 @@ class ChessBoardWidget(QWidget):
 
             # Update board state immediately
             self._board.push(move)
-            self.move_played.emit(move, interactive)
+            self.move_played.emit(move, move_info)
 
             # Start animation
             self._anim_progress = 0.0
@@ -397,7 +407,7 @@ class ChessBoardWidget(QWidget):
             self.update()
         else:
             self._board.push(move)
-            self.move_played.emit(move, interactive)
+            self.move_played.emit(move, move_info)
             self.update()
 
     def undo_move(self, animate: bool = True) -> None:
