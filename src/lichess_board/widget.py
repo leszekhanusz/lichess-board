@@ -223,6 +223,8 @@ class ChessBoardWidget(QWidget):
             self._legal_moves = [
                 m for m in self._board.legal_moves if m.from_square == square
             ]
+            # Hide cursor while dragging
+            self.setCursor(Qt.CursorShape.BlankCursor)
             self.update()
         else:
             self._clear_selection()
@@ -245,6 +247,9 @@ class ChessBoardWidget(QWidget):
             return
 
         square = self._pos_to_square(event.position())
+
+        # Restore cursor when dragging ends
+        self.unsetCursor()
 
         if square is not None and self._dragged_square is not None:
             move = self._find_move(self._dragged_square, square)
