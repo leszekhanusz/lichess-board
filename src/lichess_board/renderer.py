@@ -99,51 +99,6 @@ class Renderer:
                         file_text,
                     )
 
-    def draw_pieces(
-        self,
-        painter: QPainter,
-        rect: QRectF,
-        board: chess.Board,
-        flipped: bool,
-        exclude_square: Optional[int] = None,
-        faded_square: Optional[int] = None,
-    ) -> None:
-        square_size = rect.width() / 8
-
-        for square in chess.SQUARES:
-            if square == exclude_square:
-                continue
-
-            piece = board.piece_at(square)
-            if piece:
-                # Calculate position
-                rank = chess.square_rank(square)
-                file = chess.square_file(square)
-
-                if flipped:
-                    visual_row = rank
-                    visual_col = 7 - file
-                else:
-                    visual_row = 7 - rank
-                    visual_col = file
-
-                x = rect.x() + visual_col * square_size
-                y = rect.y() + visual_row * square_size
-
-                piece_code = (
-                    f"{'w' if piece.color == chess.WHITE else 'b'}"
-                    f"{piece.symbol().upper()}"
-                )
-                renderer = self.piece_renderers.get(piece_code)
-                if renderer:
-                    if square == faded_square:
-                        painter.save()
-                        painter.setOpacity(0.5)
-                        renderer.render(painter, QRectF(x, y, square_size, square_size))
-                        painter.restore()
-                    else:
-                        renderer.render(painter, QRectF(x, y, square_size, square_size))
-
     def draw_dragged_piece(
         self,
         painter: QPainter,
