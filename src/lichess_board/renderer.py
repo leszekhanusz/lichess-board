@@ -3,7 +3,7 @@ from typing import Dict, Optional, Tuple
 
 import chess
 from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QBrush, QColor, QPainter, QPen, QRadialGradient
+from PySide6.QtGui import QBrush, QColor, QPainter, QRadialGradient
 from PySide6.QtSvg import QSvgRenderer
 
 
@@ -14,6 +14,7 @@ class Renderer:
         self.highlight_color = QColor(155, 199, 0, 105)  # Lime with alpha
         self.selected_color = QColor(20, 85, 30, 128)  # Green with alpha
         self.move_hint_color = QColor(20, 85, 30, 50)  # Faint green
+        self.capture_hint_color = QColor(20, 85, 0, 76)  # Green with alpha for captures
         self.check_color = QColor(255, 0, 0, 100)  # Red with alpha for check
 
         self.piece_renderers: Dict[str, QSvgRenderer] = {}
@@ -194,21 +195,25 @@ class Renderer:
 
             # Check if target is occupied (capture)
             if board.piece_at(target):
-                color = self.move_hint_color
-                # Draw ring for capture
-                painter.setBrush(Qt.BrushStyle.NoBrush)
-                pen = QPen(color)
-                pen.setWidth(int(square_size * 0.1))
-                painter.setPen(pen)
-                painter.drawEllipse(
-                    QRectF(
-                        x + square_size * 0.1,
-                        y + square_size * 0.1,
-                        square_size * 0.8,
-                        square_size * 0.8,
-                    )
-                )
+                # Draw radial gradient for capture (green corners)
+                # Gradient from transparent center to green edges
+                # CSS: radial-gradient(
+                #   transparent 0%, transparent 79%, rgba(20, 85, 0, 0.3) 80%
+                # );
+
+                radius = (square_size / 2) * 1.414
+
+                gradient = QRadialGradient(center_x, center_y, radius)
+                gradient.setColorAt(0.0, Qt.GlobalColor.transparent)
+                gradient.setColorAt(0.79, Qt.GlobalColor.transparent)
+                gradient.setColorAt(0.8, self.capture_hint_color)
+                gradient.setColorAt(1.0, self.capture_hint_color)
+
+                painter.setBrush(QBrush(gradient))
                 painter.setPen(Qt.PenStyle.NoPen)
+                painter.fillRect(
+                    QRectF(x, y, square_size, square_size), QBrush(gradient)
+                )
             else:
                 color = self.move_hint_color
                 painter.setBrush(QBrush(color))
