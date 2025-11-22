@@ -48,6 +48,33 @@ You can run all checks easily using the `make` command:
 
 Please ensure `make check` and `make test` pass before submitting your PR.
 
+## Testing and Code Coverage
+
+### Running Tests
+
+You can run tests using the following commands:
+
+```bash
+# Run all tests
+make test
+
+# Run tests with coverage report
+make coverage
+
+# Run tests with coverage and open HTML report
+make coverage-html
+```
+
+### Code Coverage Requirements
+
+This project maintains a **minimum code coverage of 80%**. All tests must pass and coverage must meet this threshold before a PR can be merged.
+
+- Coverage is automatically verified on every push and pull request via GitHub Actions
+- The build will fail if coverage drops below 80%
+- You can view detailed coverage reports in the `htmlcov/` directory after running `make coverage-html`
+
+For detailed information on setting up code coverage verification on GitHub, see [COVERAGE.md](COVERAGE.md).
+
 ## Submitting Changes
 
 1. Fork the repository.
