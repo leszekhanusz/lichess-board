@@ -36,6 +36,8 @@ def compare_images(widget: ChessBoardWidget, reference_filename: str) -> None:
     # Compare pixels
     # Note: This is a strict pixel-by-pixel comparison.
     # It might be fragile across different environments.
+    # Ensuring that the QT_QPA_PLATFORM is set to offscreen seems to allow this
+    # This is now done in conftest.py
     assert image == ref_image, f"Image content mismatch for {reference_filename}"
 
 
