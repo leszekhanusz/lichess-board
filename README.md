@@ -76,8 +76,8 @@ if __name__ == "__main__":
 - **`set_board(board: chess.Board)`**: Sets the board state to display.
 - **`set_flipped(flipped: bool)`**: Sets the board orientation (`True` for Black at bottom, `False` for White at bottom).
 - **`play_move(move: chess.Move, animate: bool = True, interactive: bool = False)`**: Programmatically make a move on the board, optionally with animation.
-- **`move_played` (Signal)**: Emitted when a move is played on the board. Carries two parameters:
-  - `chess.Move`: The move that was played.
+- `move_played(chess.Move, dict)`: Emitted when a move is played. The dictionary contains move information (e.g., `{'interactive': True}`).
+- `move_undone(chess.Move)`: Emitted when a move is undone. The argument is the move that was undone.
   - `dict`: A dictionary containing move information with the following keys:
     - `'interactive'` (bool): `True` if the move was made by user interaction, `False` if played programmatically.
 

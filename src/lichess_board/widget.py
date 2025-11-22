@@ -21,6 +21,7 @@ class ChessBoardWidget(QWidget):
     """
 
     move_played = Signal(chess.Move, dict)
+    move_undone = Signal(chess.Move)
 
     def __init__(
         self, parent: Optional[QWidget] = None, board: Optional[chess.Board] = None
@@ -473,6 +474,7 @@ class ChessBoardWidget(QWidget):
 
             # Update board state immediately
             self._board.pop()
+            self.move_undone.emit(move)
 
             # Start animation
             self._anim_progress = 0.0
@@ -480,6 +482,7 @@ class ChessBoardWidget(QWidget):
             self.update()
         else:
             self._board.pop()
+            self.move_undone.emit(move)
             self.update()
 
     def _update_animation(self) -> None:

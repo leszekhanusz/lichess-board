@@ -151,6 +151,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(nav_widget)
 
         self.board_widget.move_played.connect(self.on_move_played)
+        self.board_widget.move_undone.connect(self.on_move_undone)
 
         self.flipped = False
         self.player_color = chess.WHITE
@@ -214,6 +215,14 @@ class MainWindow(QMainWindow):
         )
         self.update_buttons()
 
+    def on_move_undone(self, move: chess.Move) -> None:
+        print(f"Move undone: {move}")
+        self.current_move_index -= 1
+        print(
+            f"Move history: {self.move_history} at position {self.current_move_index}"
+        )
+        self.update_buttons()
+
     def check_opponent_move(self) -> None:
         board = self.board_widget._board
         if board.is_game_over():
@@ -256,7 +265,6 @@ class MainWindow(QMainWindow):
     def go_first(self) -> None:
         while not self.is_at_first_move():
             self.board_widget.undo_move(animate=False)
-            self.current_move_index -= 1
         self.update_buttons()
         print(
             f"Move history: {self.move_history} at position {self.current_move_index}"
@@ -265,7 +273,6 @@ class MainWindow(QMainWindow):
     def go_prev(self) -> None:
         if not self.is_at_first_move():
             self.board_widget.undo_move(animate=True)
-            self.current_move_index -= 1
             self.update_buttons()
         print(
             f"Move history: {self.move_history} at position {self.current_move_index}"
