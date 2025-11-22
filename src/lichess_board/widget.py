@@ -18,6 +18,8 @@ class ChessBoardWidget(QWidget):
             The second parameter is a dictionary containing move information:
                 - 'interactive' (bool): True if the move was made by user interaction,
                   False if played programmatically via play_move().
+        move_undone(chess.Move): Emitted when the last move is undone.
+            The parameter is the chess.Move object that was undone.
     """
 
     move_played = Signal(chess.Move, dict)
@@ -125,14 +127,10 @@ class ChessBoardWidget(QWidget):
                 # Draw dragged piece faded
                 piece = self._board.piece_at(square)
                 if piece:
-                    rank = chess.square_rank(square)
-                    file = chess.square_file(square)
-                    if self._flipped:
-                        visual_row = rank
-                        visual_col = 7 - file
-                    else:
-                        visual_row = 7 - rank
-                        visual_col = file
+                    visual_row, visual_col = self._renderer.get_visual_coordinates(
+                        square, self._flipped
+                    )
+
                     x = rect.x() + visual_col * square_size
                     y = rect.y() + visual_row * square_size
                     color_prefix = "w" if piece.color == chess.WHITE else "b"
@@ -146,14 +144,10 @@ class ChessBoardWidget(QWidget):
             else:
                 piece = self._board.piece_at(square)
                 if piece:
-                    rank = chess.square_rank(square)
-                    file = chess.square_file(square)
-                    if self._flipped:
-                        visual_row = rank
-                        visual_col = 7 - file
-                    else:
-                        visual_row = 7 - rank
-                        visual_col = file
+                    visual_row, visual_col = self._renderer.get_visual_coordinates(
+                        square, self._flipped
+                    )
+
                     x = rect.x() + visual_col * square_size
                     y = rect.y() + visual_row * square_size
                     color_prefix = "w" if piece.color == chess.WHITE else "b"
@@ -493,15 +487,9 @@ class ChessBoardWidget(QWidget):
         rect = self._get_board_rect()
         square_size = rect.width() / 8
 
-        rank = chess.square_rank(square)
-        file = chess.square_file(square)
-
-        if self._flipped:
-            visual_row = rank
-            visual_col = 7 - file
-        else:
-            visual_row = 7 - rank
-            visual_col = file
+        visual_row, visual_col = self._renderer.get_visual_coordinates(
+            square, self._flipped
+        )
 
         x = rect.x() + visual_col * square_size + square_size / 2
         y = rect.y() + visual_row * square_size + square_size / 2
