@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Added `move_undone` signal to `ChessBoardWidget`.
+- Added mouse wheel support to demo application.
+- Added visual regression tests for widget rendering.
+- Added code coverage verification with pytest-cov and Codecov integration.
+- Added project URLs to `pyproject.toml`.
+
+### Changed
+- Updated capture indicator to match Lichess style.
+- Refactored `play_move` and `undo_move` to be more DRY.
+- Refactored visual coordinate calculation to use a shared helper method.
+- Refactored castling animation logic to support Chess960.
+- Improved Chess960 tests to use non-standard starting positions.
+- Added comprehensive tests to achieve 100% code coverage.
+
+### Fixed
+- Fixed visual regression tests for CI by using offscreen rendering.
+
+### Removed
+- Removed unused `draw_pieces` method.
+- Removed unneeded code in demo.py.
+
 ## [0.3.0] - 2025-11-21
 
 ### Added
