@@ -46,6 +46,19 @@ class Renderer:
             renderer = QSvgRenderer(svg_data)
             self.piece_renderers[p] = renderer
 
+    def _get_visual_coordinates(self, square: int, flipped: bool) -> Tuple[int, int]:
+        rank = chess.square_rank(square)
+        file = chess.square_file(square)
+
+        if flipped:
+            visual_row = rank
+            visual_col = 7 - file
+        else:
+            visual_row = 7 - rank
+            visual_col = file
+
+        return visual_row, visual_col
+
     def draw_board(self, painter: QPainter, rect: QRectF, flipped: bool) -> None:
         square_size = rect.width() / 8
 
@@ -133,15 +146,7 @@ class Renderer:
             if target == hide_square:
                 continue
 
-            rank = chess.square_rank(target)
-            file = chess.square_file(target)
-
-            if flipped:
-                visual_row = rank
-                visual_col = 7 - file
-            else:
-                visual_row = 7 - rank
-                visual_col = file
+            visual_row, visual_col = self._get_visual_coordinates(target, flipped)
 
             x = rect.x() + visual_col * square_size
             y = rect.y() + visual_row * square_size
@@ -194,15 +199,7 @@ class Renderer:
         self, painter: QPainter, rect: QRectF, square: int, color: QColor, flipped: bool
     ) -> None:
         square_size = rect.width() / 8
-        rank = chess.square_rank(square)
-        file = chess.square_file(square)
-
-        if flipped:
-            visual_row = rank
-            visual_col = 7 - file
-        else:
-            visual_row = 7 - rank
-            visual_col = file
+        visual_row, visual_col = self._get_visual_coordinates(square, flipped)
 
         x = rect.x() + visual_col * square_size
         y = rect.y() + visual_row * square_size
@@ -214,15 +211,7 @@ class Renderer:
     ) -> None:
         """Draw a red blurred circle behind the king when in check."""
         square_size = rect.width() / 8
-        rank = chess.square_rank(square)
-        file = chess.square_file(square)
-
-        if flipped:
-            visual_row = rank
-            visual_col = 7 - file
-        else:
-            visual_row = 7 - rank
-            visual_col = file
+        visual_row, visual_col = self._get_visual_coordinates(square, flipped)
 
         x = rect.x() + visual_col * square_size
         y = rect.y() + visual_row * square_size
