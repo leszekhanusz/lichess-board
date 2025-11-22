@@ -398,18 +398,14 @@ class ChessBoardWidget(QWidget):
                             (rook, rook_start, rook_end, rook_to)
                         )
 
-            # Update board state immediately
-            self._board.push(move)
-            self.move_played.emit(move, move_info)
-
             # Start animation
             self._anim_progress = 0.0
             self._anim_timer.start()
-            self.update()
-        else:
-            self._board.push(move)
-            self.move_played.emit(move, move_info)
-            self.update()
+
+        # Update board state immediately
+        self._board.push(move)
+        self.move_played.emit(move, move_info)
+        self.update()
 
     def undo_move(self, animate: bool = True) -> None:
         # Clear selection to remove legal move highlights
@@ -472,18 +468,14 @@ class ChessBoardWidget(QWidget):
                                 (rook, rook_start, rook_end, rook_from)
                             )
 
-            # Update board state immediately
-            self._board.pop()
-            self.move_undone.emit(move)
-
             # Start animation
             self._anim_progress = 0.0
             self._anim_timer.start()
-            self.update()
-        else:
-            self._board.pop()
-            self.move_undone.emit(move)
-            self.update()
+
+        # Update board state immediately
+        self._board.pop()
+        self.move_undone.emit(move)
+        self.update()
 
     def _update_animation(self) -> None:
         self._anim_progress += 0.05  # Adjust speed
