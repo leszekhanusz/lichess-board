@@ -1,13 +1,13 @@
 import os
 import sys
 
-import chess
-from PySide6.QtCore import QPointF, QSize, Qt
-from PySide6.QtGui import QImage, QMouseEvent
-from PySide6.QtWidgets import QApplication
+# Force offscreen platform to match CI environment
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
-# Add src to path to import lichess_board
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
+import chess  # noqa: E402
+from PySide6.QtCore import QPointF, QSize, Qt  # noqa: E402
+from PySide6.QtGui import QImage, QMouseEvent  # noqa: E402
+from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from lichess_board import ChessBoardWidget  # noqa: E402
 
@@ -33,6 +33,13 @@ def save_snapshot(widget: ChessBoardWidget, filename: str) -> None:
 
 
 def main() -> None:
+    """Generate reference images for visual regression tests.
+
+    IMPORTANT: This script uses offscreen rendering (set via
+    QT_QPA_PLATFORM env var) to ensure the generated images match what
+    GitHub Actions will produce during CI. If you regenerate these images
+    without offscreen rendering, the tests will fail in CI.
+    """
     app = QApplication(sys.argv)
 
     # Fixed size for consistency
