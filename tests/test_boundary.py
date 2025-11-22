@@ -1,4 +1,5 @@
 """Tests specifically targeting the last 3 uncovered lines to reach 100% coverage."""
+
 import chess
 from PySide6.QtCore import QPointF, Qt
 from PySide6.QtGui import QMouseEvent
