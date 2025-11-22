@@ -10,7 +10,11 @@ If you need to regenerate the reference images (e.g., after intentional UI chang
 python tests/generate_test_images.py
 ```
 
-**IMPORTANT:** The script automatically uses `QT_QPA_PLATFORM=offscreen` to ensure the generated images match the rendering environment used in GitHub Actions CI. This prevents test failures due to rendering differences between local graphical displays and the CI environment.
+**IMPORTANT:** The script automatically uses `QT_QPA_PLATFORM=offscreen` to ensure the generated images match the rendering environment used in GitHub Actions CI.
+
+## Comparison Method
+
+The tests use a fuzzy comparison (Root Mean Square difference) with a tolerance of 5.0 to allow for small rendering differences (antialiasing, font hinting) between environments. This makes the tests more robust than strict pixel-perfect equality.
 
 ## Image Files
 

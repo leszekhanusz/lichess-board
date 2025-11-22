@@ -1,3 +1,4 @@
+import math
 import os
 from typing import TYPE_CHECKING
 
@@ -14,8 +15,10 @@ ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets", "images")
 SIZE = QSize(400, 400)
 
 
-def compare_images(widget: ChessBoardWidget, reference_filename: str) -> None:
-    """Render widget and compare with reference image."""
+def compare_images(
+    widget: ChessBoardWidget, reference_filename: str, tolerance: float = 5.0
+) -> None:
+    """Render widget and compare with reference image using RMS difference."""
     # Render widget
     image = QImage(widget.size(), QImage.Format.Format_ARGB32)
     image.fill(Qt.GlobalColor.transparent)
@@ -33,12 +36,44 @@ def compare_images(widget: ChessBoardWidget, reference_filename: str) -> None:
         image.size() == ref_image.size()
     ), f"Size mismatch: {image.size()} != {ref_image.size()}"
 
-    # Compare pixels
-    # Note: This is a strict pixel-by-pixel comparison.
-    # It might be fragile across different environments.
-    # Ensuring that the QT_QPA_PLATFORM is set to offscreen seems to allow this
-    # This is now done in conftest.py
-    assert image == ref_image, f"Image content mismatch for {reference_filename}"
+    # Fast path: strict equality
+    if image == ref_image:
+        return
+
+    # Slow path: Calculate RMS difference
+    # We iterate over pixels to calculate the difference
+    width = image.width()
+    height = image.height()
+    diff_sum = 0.0
+
+    # Check up to a reasonable number of pixels to avoid extremely slow tests
+    # but 400x400 is small enough (160k pixels) to do in pure Python if needed.
+    # Using pixel() which returns int is faster than pixelColor()
+
+    for y in range(height):
+        for x in range(width):
+            p1 = image.pixel(x, y)
+            p2 = ref_image.pixel(x, y)
+
+            # Extract RGB (ignoring alpha for now as board is opaque usually,
+            # but ARGB32 has alpha. Let's include alpha if needed, or just RGB)
+            # qRgb/qRed/etc are C++ macros, in Python we shift manually or use QColor
+            # Manual shift for speed: ARGB
+
+            r1, g1, b1 = (p1 >> 16) & 0xFF, (p1 >> 8) & 0xFF, p1 & 0xFF
+            r2, g2, b2 = (p2 >> 16) & 0xFF, (p2 >> 8) & 0xFF, p2 & 0xFF
+
+            diff_sum += (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2
+
+    # Mean Squared Error
+    total_components = width * height * 3
+    mse = diff_sum / total_components
+    rms = math.sqrt(mse)
+
+    assert rms <= tolerance, (
+        f"Image mismatch for {reference_filename}. "
+        f"RMS difference: {rms:.2f} > tolerance {tolerance}"
+    )
 
 
 def test_initial_board(qtbot: "QtBot") -> None:
