@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 
 import chess
 from PySide6.QtCore import QTimer
-from PySide6.QtGui import QFont, QFontDatabase, QResizeEvent
+from PySide6.QtGui import QFont, QFontDatabase, QResizeEvent, QWheelEvent
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -184,6 +184,14 @@ class MainWindow(QMainWindow):
         # Adjust height if needed (tolerance to avoid infinite loops)
         if abs(self.height() - required_height) > 5:
             self.resize(width, int(required_height))
+
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        """Handle mouse wheel events to navigate moves."""
+        delta = event.angleDelta().y()
+        if delta > 0:
+            self.go_next()
+        elif delta < 0:
+            self.go_prev()
 
     def toggle_flip(self) -> None:
         self.flipped = not self.flipped
