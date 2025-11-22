@@ -4,209 +4,205 @@ from pytestqt.qtbot import QtBot
 from lichess_board import ChessBoardWidget
 
 
-def test_chess960_white_kingside_castling(qtbot: QtBot) -> None:
-    """Test castling in Chess960 mode - white kingside."""
+def test_chess960_kingside_king_on_d1(qtbot: QtBot) -> None:
+    """Test Chess960 kingside castling with king on d1, rook on h1.
+
+    In this position, castling kingside means king goes d1->g1,
+    and rook h1->f1. This is different from standard chess.
+    """
     widget = ChessBoardWidget()
     qtbot.addWidget(widget)
     widget.show()
     qtbot.waitExposed(widget)
 
-    # Create a Chess960 board with a specific position
-    # Position 518: RNBQKBNR (same as standard, but with chess960 flag)
-    board = chess.Board(
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", chess960=True
-    )
-
-    # Set up position where white can castle
-    board.push_san("e4")
-    board.push_san("e5")
-    board.push_san("Nf3")
-    board.push_san("Nc6")
-    board.push_san("Bc4")
-    board.push_san("Bc5")
+    # Chess960 Position with king on c1, rook on h1
+    # Simpler: start with standard position, move king to c1
+    board = chess.Board(chess960=True)
+    # Start fresh with custom setup
+    board.clear()
+    board.set_piece_at(chess.C1, chess.Piece(chess.KING, chess.WHITE))
+    board.set_piece_at(chess.H1, chess.Piece(chess.ROOK, chess.WHITE))
+    board.set_piece_at(chess.A1, chess.Piece(chess.ROOK, chess.WHITE))
+    # Add black king for valid position
+    board.set_piece_at(chess.E8, chess.Piece(chess.KING, chess.BLACK))
+    board.set_castling_fen("KQkq")
+    board.turn = chess.WHITE
 
     widget.set_board(board)
 
-    # Verify it's a Chess960 board
+    # Verify setup
     assert widget._board.chess960 is True
+    assert widget._board.piece_at(chess.C1) == chess.Piece(chess.KING, chess.WHITE)
+    assert widget._board.piece_at(chess.H1) == chess.Piece(chess.ROOK, chess.WHITE)
 
-    # Perform kingside castling
-    castle_move = chess.Move.from_uci("e1g1")
+    # In Chess960, castling is king captures rook notation: c1h1
+    castle_move = chess.Move.from_uci("c1h1")
     assert widget._board.is_castling(castle_move)
 
-    # This should trigger the chess960 branch: if self._board.chess960:
+    # Play the move - this triggers chess960 logic
     widget.play_move(castle_move, animate=True)
-
-    # Wait for animation
     qtbot.wait(1000)
+
+    # After castling: king on g1, rook on f1
+    assert widget._board.piece_at(chess.G1) == chess.Piece(chess.KING, chess.WHITE)
+    assert widget._board.piece_at(chess.F1) == chess.Piece(chess.ROOK, chess.WHITE)
+    assert widget._board.piece_at(chess.C1) is None
+    assert widget._board.piece_at(chess.H1) is None
+
+
+def test_chess960_queenside_king_on_f1(qtbot: QtBot) -> None:
+    """Test Chess960 queenside castling with king on f1, rook on a1.
+
+    King goes f1->c1, rook a1->d1. This tests non-standard positions.
+    """
+    widget = ChessBoardWidget()
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.waitExposed(widget)
+
+    # Chess960 Position 293: RNBBNKQR
+    # King on f1, queenside rook on a1
+    fen = "rnbbnkqr/pppppppp/8/8/8/8/PPPPPPPP/RNBBNKQR w KQkq - 0 1"
+    board = chess.Board(fen, chess960=True)
+
+    # Clear path for castling
+    board.remove_piece_at(chess.B1)
+    board.remove_piece_at(chess.C1)
+    board.remove_piece_at(chess.D1)
+    board.remove_piece_at(chess.E1)
+
+    widget.set_board(board)
+
+    # Verify setup
+    assert widget._board.chess960 is True
+    assert widget._board.piece_at(chess.F1) == chess.Piece(chess.KING, chess.WHITE)
+    assert widget._board.piece_at(chess.A1) == chess.Piece(chess.ROOK, chess.WHITE)
+
+    # Chess960 castling: king captures rook
+    castle_move = chess.Move.from_uci("f1a1")
+    assert widget._board.is_castling(castle_move)
+
+    widget.play_move(castle_move, animate=True)
+    qtbot.wait(1000)
+
+    # After queenside castling: king on c1, rook on d1
+    assert widget._board.piece_at(chess.C1) == chess.Piece(chess.KING, chess.WHITE)
+    assert widget._board.piece_at(chess.D1) == chess.Piece(chess.ROOK, chess.WHITE)
+    assert widget._board.piece_at(chess.F1) is None
+    assert widget._board.piece_at(chess.A1) is None
+
+
+def test_chess960_black_kingside_king_on_c8(qtbot: QtBot) -> None:
+    """Test Chess960 black kingside castling with king on c8, rook on h8."""
+    widget = ChessBoardWidget()
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.waitExposed(widget)
+
+    # Chess960 position with black king on c8
+    fen = "rbkqnbnr/pppppppp/8/8/8/8/PPPPPPPP/RBKQNBNR w KQkq - 0 1"
+    board = chess.Board(fen, chess960=True)
+
+    # Make a white move first, then clear black pieces for castling
+    board.push_san("e4")
+    board.remove_piece_at(chess.D8)
+    board.remove_piece_at(chess.E8)
+    board.remove_piece_at(chess.F8)
+    board.remove_piece_at(chess.G8)
+
+    widget.set_board(board)
+
+    assert widget._board.chess960 is True
+    assert widget._board.piece_at(chess.C8) == chess.Piece(chess.KING, chess.BLACK)
+    assert widget._board.piece_at(chess.H8) == chess.Piece(chess.ROOK, chess.BLACK)
+
+    # Black castles kingside: c8h8
+    castle_move = chess.Move.from_uci("c8h8")
+    assert widget._board.is_castling(castle_move)
+
+    widget.play_move(castle_move, animate=True)
+    qtbot.wait(1000)
+
+    # After castling: king on g8, rook on f8
+    assert widget._board.piece_at(chess.G8) == chess.Piece(chess.KING, chess.BLACK)
+    assert widget._board.piece_at(chess.F8) == chess.Piece(chess.ROOK, chess.BLACK)
+    assert widget._board.piece_at(chess.C8) is None
+    assert widget._board.piece_at(chess.H8) is None
+
+
+def test_chess960_rook_already_on_final_square(qtbot: QtBot) -> None:
+    """Test Chess960 castling where rook is already on its final square.
+
+    King on e1, rook on f1. Kingside castling: king e1->g1, rook stays f1.
+    This is an edge case in Chess960.
+    """
+    widget = ChessBoardWidget()
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.waitExposed(widget)
+
+    # Custom Chess960 position: king e1, rook f1
+    fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKRBN w KQkq - 0 1"
+    board = chess.Board(fen, chess960=True)
+
+    # Clear g1 for castling
+    board.remove_piece_at(chess.G1)
+
+    widget.set_board(board)
+
+    assert widget._board.chess960 is True
+    assert widget._board.piece_at(chess.E1) == chess.Piece(chess.KING, chess.WHITE)
+    assert widget._board.piece_at(chess.F1) == chess.Piece(chess.ROOK, chess.WHITE)
+
+    # Castling: e1f1 (king captures rook)
+    castle_move = chess.Move.from_uci("e1f1")
+    assert widget._board.is_castling(castle_move)
+
+    widget.play_move(castle_move, animate=True)
+    qtbot.wait(1000)
+
+    # King moves to g1, rook stays on f1
+    assert widget._board.piece_at(chess.G1) == chess.Piece(chess.KING, chess.WHITE)
+    assert widget._board.piece_at(chess.F1) == chess.Piece(chess.ROOK, chess.WHITE)
+    assert widget._board.piece_at(chess.E1) is None
+
+
+def test_chess960_undo_non_standard_castling(qtbot: QtBot) -> None:
+    """Test undoing Chess960 castling with non-standard piece positions."""
+    widget = ChessBoardWidget()
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.waitExposed(widget)
+
+    # King on c1, rook on h1 (matching first test)
+    board = chess.Board(chess960=True)
+    board.clear()
+    board.set_piece_at(chess.C1, chess.Piece(chess.KING, chess.WHITE))
+    board.set_piece_at(chess.H1, chess.Piece(chess.ROOK, chess.WHITE))
+    board.set_piece_at(chess.A1, chess.Piece(chess.ROOK, chess.WHITE))
+    board.set_piece_at(chess.E8, chess.Piece(chess.KING, chess.BLACK))
+    board.set_castling_fen("KQkq")
+    board.turn = chess.WHITE
+
+    widget.set_board(board)
+
+    fen_before = widget._board.fen()
+
+    # Castle: c1h1
+    castle_move = chess.Move.from_uci("c1h1")
+    widget.play_move(castle_move, animate=False)
 
     # Verify castling happened
     assert widget._board.piece_at(chess.G1) == chess.Piece(chess.KING, chess.WHITE)
     assert widget._board.piece_at(chess.F1) == chess.Piece(chess.ROOK, chess.WHITE)
-    assert widget._board.piece_at(chess.E1) is None
-    assert widget._board.piece_at(chess.H1) is None
 
-
-def test_chess960_white_queenside_castling(qtbot: QtBot) -> None:
-    """Test castling in Chess960 mode - white queenside."""
-    widget = ChessBoardWidget()
-    qtbot.addWidget(widget)
-    widget.show()
-    qtbot.waitExposed(widget)
-
-    # Create a Chess960 board
-    board = chess.Board(
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", chess960=True
-    )
-
-    # Set up position where white can castle queenside
-    board.push_san("d4")
-    board.push_san("d5")
-    board.push_san("Nc3")
-    board.push_san("Nc6")
-    board.push_san("Bf4")
-    board.push_san("Bf5")
-    board.push_san("Qd2")
-    board.push_san("Qd7")
-
-    widget.set_board(board)
-
-    # Verify it's a Chess960 board
-    assert widget._board.chess960 is True
-
-    # Perform queenside castling
-    castle_move = chess.Move.from_uci("e1c1")
-    assert widget._board.is_castling(castle_move)
-
-    # This should trigger the chess960 branch in _get_castling_info
-    widget.play_move(castle_move, animate=True)
-
-    # Wait for animation
-    qtbot.wait(1000)
-
-    # Verify castling happened
-    assert widget._board.piece_at(chess.C1) == chess.Piece(chess.KING, chess.WHITE)
-    assert widget._board.piece_at(chess.D1) == chess.Piece(chess.ROOK, chess.WHITE)
-
-
-def test_chess960_black_kingside_castling(qtbot: QtBot) -> None:
-    """Test castling in Chess960 mode - black kingside."""
-    widget = ChessBoardWidget()
-    qtbot.addWidget(widget)
-    widget.show()
-    qtbot.waitExposed(widget)
-
-    # Create a Chess960 board
-    board = chess.Board(
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", chess960=True
-    )
-
-    # Set up position where black can castle kingside
-    board.push_san("e4")
-    board.push_san("e5")
-    board.push_san("Nc3")
-    board.push_san("Nf6")
-    board.push_san("Bc4")
-    board.push_san("Bc5")
-    board.push_san("d3")  # White's turn, arbitrary move
-
-    widget.set_board(board)
-
-    # Verify it's a Chess960 board
-    assert widget._board.chess960 is True
-
-    # Perform black kingside castling
-    castle_move = chess.Move.from_uci("e8g8")
-    assert widget._board.is_castling(castle_move)
-
-    widget.play_move(castle_move, animate=True)
-
-    # Wait for animation
-    qtbot.wait(1000)
-
-    # Verify castling happened
-    assert widget._board.piece_at(chess.G8) == chess.Piece(chess.KING, chess.BLACK)
-    assert widget._board.piece_at(chess.F8) == chess.Piece(chess.ROOK, chess.BLACK)
-
-
-def test_chess960_black_queenside_castling(qtbot: QtBot) -> None:
-    """Test castling in Chess960 mode - black queenside."""
-    widget = ChessBoardWidget()
-    qtbot.addWidget(widget)
-    widget.show()
-    qtbot.waitExposed(widget)
-
-    # Create a Chess960 board
-    board = chess.Board(
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", chess960=True
-    )
-
-    # Set up position where black can castle queenside
-    board.push_san("e4")
-    board.push_san("d5")
-    board.push_san("Nc3")
-    board.push_san("Nc6")
-    board.push_san("Bc4")
-    board.push_san("Bf5")
-    board.push_san("d3")
-    board.push_san("Qd7")
-    board.push_san("Be3")  # White's turn
-
-    widget.set_board(board)
-
-    # Verify it's a Chess960 board
-    assert widget._board.chess960 is True
-
-    # Perform black queenside castling
-    castle_move = chess.Move.from_uci("e8c8")
-    assert widget._board.is_castling(castle_move)
-
-    widget.play_move(castle_move, animate=True)
-
-    # Wait for animation
-    qtbot.wait(1000)
-
-    # Verify castling happened
-    assert widget._board.piece_at(chess.C8) == chess.Piece(chess.KING, chess.BLACK)
-    assert widget._board.piece_at(chess.D8) == chess.Piece(chess.ROOK, chess.BLACK)
-
-
-def test_chess960_undo_castling(qtbot: QtBot) -> None:
-    """Test undoing castling in Chess960 mode."""
-    widget = ChessBoardWidget()
-    qtbot.addWidget(widget)
-    widget.show()
-    qtbot.waitExposed(widget)
-
-    # Create a Chess960 board
-    board = chess.Board(
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", chess960=True
-    )
-
-    # Set up position where white can castle
-    board.push_san("e4")
-    board.push_san("e5")
-    board.push_san("Nf3")
-    board.push_san("Nc6")
-    board.push_san("Bc4")
-    board.push_san("Bc5")
-
-    widget.set_board(board)
-
-    # Store FEN before castling
-    fen_before = widget._board.fen()
-
-    # Castle
-    castle_move = chess.Move.from_uci("e1g1")
-    widget.play_move(castle_move, animate=False)
-
-    # Undo with animation - should also use chess960 logic
+    # Undo with animation
     widget.undo_move(animate=True)
-
-    # Wait for animation
     qtbot.wait(1000)
 
     # Verify position restored
     assert widget._board.fen() == fen_before
-    assert widget._board.piece_at(chess.E1) == chess.Piece(chess.KING, chess.WHITE)
+    assert widget._board.piece_at(chess.C1) == chess.Piece(chess.KING, chess.WHITE)
     assert widget._board.piece_at(chess.H1) == chess.Piece(chess.ROOK, chess.WHITE)
+    assert widget._board.piece_at(chess.G1) is None
+    assert widget._board.piece_at(chess.F1) is None
