@@ -189,9 +189,9 @@ class MainWindow(QMainWindow):
         """Handle mouse wheel events to navigate moves."""
         delta = event.angleDelta().y()
         if delta > 0:
-            self.go_next()
-        elif delta < 0:
             self.go_prev()
+        elif delta < 0:
+            self.go_next()
 
     def toggle_flip(self) -> None:
         self.flipped = not self.flipped
