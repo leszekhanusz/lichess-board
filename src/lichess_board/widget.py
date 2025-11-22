@@ -349,48 +349,35 @@ class ChessBoardWidget(QWidget):
         move_info: Dict[str, Any] = {"interactive": interactive}
 
         if animate:
-            # Setup animation based on the move
-            # We want to animate from from_square to to_square
-            # But we will update the board state immediately.
-            # So the piece will be at to_square on the board.
-            # We need to exclude to_square and draw piece moving from
-            # from_square to to_square.
-
             self._animating_pieces = []
 
-            # Main piece animation
-            piece = self._board.piece_at(move.from_square)
-            if piece:
-                start_pos = self._get_square_center(move.from_square)
-                end_pos = self._get_square_center(move.to_square)
-                # Exclude to_square because that's where the piece will be after push
-                self._animating_pieces.append(
-                    (piece, start_pos, end_pos, move.to_square)
-                )
-
-            # Castling animation
+            # Check for castling
             if self._board.is_castling(move):
-                king_to = move.to_square
-                if king_to == chess.G1:  # White kingside
-                    rook_from, rook_to = chess.H1, chess.F1
-                elif king_to == chess.C1:  # White queenside
-                    rook_from, rook_to = chess.A1, chess.D1
-                elif king_to == chess.G8:  # Black kingside
-                    rook_from, rook_to = chess.H8, chess.F8
-                elif king_to == chess.C8:  # Black queenside
-                    rook_from, rook_to = chess.A8, chess.D8
-                else:
-                    rook_from, rook_to = None, None
+                king_to, rook_from, rook_to = self._get_castling_info(move)
 
-                if rook_from is not None and rook_to is not None:
-                    rook = self._board.piece_at(rook_from)
-                    if rook:
-                        rook_start = self._get_square_center(rook_from)
-                        rook_end = self._get_square_center(rook_to)
-                        # Exclude rook_to because that's where rook will be after push
-                        self._animating_pieces.append(
-                            (rook, rook_start, rook_end, rook_to)
-                        )
+                # Animate King
+                king = self._board.piece_at(move.from_square)
+                if king:
+                    king_start = self._get_square_center(move.from_square)
+                    king_end = self._get_square_center(king_to)
+                    self._animating_pieces.append((king, king_start, king_end, king_to))
+
+                # Animate Rook
+                rook = self._board.piece_at(rook_from)
+                if rook:
+                    rook_start = self._get_square_center(rook_from)
+                    rook_end = self._get_square_center(rook_to)
+                    self._animating_pieces.append((rook, rook_start, rook_end, rook_to))
+            else:
+                # Standard move animation
+                piece = self._board.piece_at(move.from_square)
+                if piece:
+                    start_pos = self._get_square_center(move.from_square)
+                    end_pos = self._get_square_center(move.to_square)
+                    # Exclude to_square as that's where the piece will be after push
+                    self._animating_pieces.append(
+                        (piece, start_pos, end_pos, move.to_square)
+                    )
 
             # Start animation
             self._anim_progress = 0.0
@@ -414,60 +401,49 @@ class ChessBoardWidget(QWidget):
             return
 
         move = self._board.peek()
+        self._board.pop()
 
         if animate:
             self._animating_pieces = []
 
-            # We are undoing. The piece is currently at to_square.
-            # We want to animate it back to from_square.
-            # After pop(), piece will be at from_square.
-            # So we exclude from_square and draw piece moving from
-            # to_square to from_square.
+            # Check for castling
+            if self._board.is_castling(move):
+                king_to, rook_from, rook_to = self._get_castling_info(move)
 
-            piece = self._board.piece_at(move.to_square)
-            if piece:
-                start_pos = self._get_square_center(move.to_square)
-                end_pos = self._get_square_center(move.from_square)
-                # Exclude from_square because that's where piece will be after pop
-                self._animating_pieces.append(
-                    (piece, start_pos, end_pos, move.from_square)
-                )
+                # Animate King (backwards: king_to -> from_square)
+                # Piece is now at from_square (after pop)
+                king = self._board.piece_at(move.from_square)
+                if king:
+                    king_start = self._get_square_center(king_to)
+                    king_end = self._get_square_center(move.from_square)
+                    self._animating_pieces.append(
+                        (king, king_start, king_end, move.from_square)
+                    )
 
-                # Check for castling undo
-                if (
-                    piece.piece_type == chess.KING
-                    and abs(move.to_square - move.from_square) == 2
-                ):
-                    king_to = move.to_square
-                    if king_to == chess.G1:  # White kingside
-                        rook_from, rook_to = chess.H1, chess.F1
-                    elif king_to == chess.C1:  # White queenside
-                        rook_from, rook_to = chess.A1, chess.D1
-                    elif king_to == chess.G8:  # Black kingside
-                        rook_from, rook_to = chess.H8, chess.F8
-                    elif king_to == chess.C8:  # Black queenside
-                        rook_from, rook_to = chess.A8, chess.D8
-                    else:
-                        rook_from, rook_to = None, None
-
-                    if rook_from is not None and rook_to is not None:
-                        # Rook is currently at rook_to
-                        rook = self._board.piece_at(rook_to)
-                        if rook:
-                            rook_start = self._get_square_center(rook_to)
-                            rook_end = self._get_square_center(rook_from)
-                            # Exclude rook_from because that's where rook
-                            # will be after pop
-                            self._animating_pieces.append(
-                                (rook, rook_start, rook_end, rook_from)
-                            )
+                # Animate Rook (backwards: rook_to -> rook_from)
+                # Rook is now at rook_from (after pop)
+                rook = self._board.piece_at(rook_from)
+                if rook:
+                    rook_start = self._get_square_center(rook_to)
+                    rook_end = self._get_square_center(rook_from)
+                    self._animating_pieces.append(
+                        (rook, rook_start, rook_end, rook_from)
+                    )
+            else:
+                # Standard undo animation
+                # Piece is now at from_square (after pop)
+                piece = self._board.piece_at(move.from_square)
+                if piece:
+                    start_pos = self._get_square_center(move.to_square)
+                    end_pos = self._get_square_center(move.from_square)
+                    self._animating_pieces.append(
+                        (piece, start_pos, end_pos, move.from_square)
+                    )
 
             # Start animation
             self._anim_progress = 0.0
             self._anim_timer.start()
 
-        # Update board state immediately
-        self._board.pop()
         self.move_undone.emit(move)
         self.update()
 
@@ -504,6 +480,37 @@ class ChessBoardWidget(QWidget):
         y = (h - s) / 2
 
         return QRectF(x, y, s, s)
+
+    def _get_castling_info(self, move: chess.Move) -> Tuple[int, int, int]:
+        """
+        Returns (king_to, rook_from, rook_to) for a castling move.
+        Handles both Standard Chess and Chess960.
+
+        Note: In Chess960 (Fischer Random), the King and Rook always end up on
+        the same squares as in Standard Chess (g1/f1 or c1/d1 for White),
+        regardless of their starting positions.
+        """
+        is_kingside = self._board.is_kingside_castling(move)
+        color = self._board.turn
+
+        # King destination (Standard for both)
+        if color == chess.WHITE:
+            king_to = chess.G1 if is_kingside else chess.C1
+            rook_to = chess.F1 if is_kingside else chess.D1
+        else:
+            king_to = chess.G8 if is_kingside else chess.C8
+            rook_to = chess.F8 if is_kingside else chess.D8
+
+        # Rook origin
+        if self._board.chess960:
+            rook_from = move.to_square
+        else:
+            if color == chess.WHITE:
+                rook_from = chess.H1 if is_kingside else chess.A1
+            else:
+                rook_from = chess.H8 if is_kingside else chess.A8
+
+        return king_to, rook_from, rook_to
 
     def _clear_selection(self) -> None:
         self._selected_square = None
