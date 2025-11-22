@@ -6,7 +6,7 @@
 
 A modern, feature-rich chess board widget for PySide6 applications, designed to mimic the visual style and user experience of Lichess. It is built on top of the powerful [python-chess](https://github.com/niklasf/python-chess) library.
 
-![Fool's Mate Demo](fools_mate.gif)
+![Fool's Mate Demo](examples/assets/fools_mate.gif)
 
 ## Features
 
@@ -70,11 +70,17 @@ if __name__ == "__main__":
     sys.exit(app.exec())
 ```
 
+A more complex example with move history navigation, board flipping, and random moves played for the opposite color can be found in the [examples/demo.py](examples/demo.py) file.
+
+![Demo](examples/assets/demo.png)
+
+
 ### API Overview
 
 - **`set_board(board: chess.Board)`**: Sets the board state to display.
 - **`set_flipped(flipped: bool)`**: Sets the board orientation (`True` for Black at bottom, `False` for White at bottom).
 - **`play_move(move: chess.Move, animate: bool = True, interactive: bool = False)`**: Programmatically make a move on the board, optionally with animation.
+- **`undo_move(move: chess.Move, animate: bool = True)`**: Programmatically unmake the last move on the board, optionally with animation.
 - `move_played(chess.Move, dict)`: Emitted when a move is played. The dictionary contains move information (e.g., `{'interactive': True}`).
 - `move_undone(chess.Move)`: Emitted when a move is undone.
 
